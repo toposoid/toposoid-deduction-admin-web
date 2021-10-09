@@ -3,6 +3,8 @@ This is a WEB API that works as a microservice within the Toposoid project.
 Toposoid is a knowledge base construction platform.(see [Toposoid　Root Project](https://github.com/toposoid/toposoid.git))
 This microservice provides the ability to manage multiple deductive inference logic to register, update microservices.
 
+[![Unit Test And Build Image Action](https://github.com/toposoid/toposoid-deduction-admin-web/actions/workflows/action.yml/badge.svg?branch=main)](https://github.com/toposoid/toposoid-deduction-admin-web/actions/workflows/action.yml)
+
 <img width="1201" alt="2021-10-01 20 31 35" src="https://user-images.githubusercontent.com/82787843/135613475-1431ddaa-5a4c-4f82-8346-51b41987da2e.png">
 
 <img width="1204" alt="2021-10-01 20 33 42" src="https://user-images.githubusercontent.com/82787843/135613393-dd124dc0-0f81-4839-85d2-10ba2e9d2281.png">
