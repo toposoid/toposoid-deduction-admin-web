@@ -1,6 +1,6 @@
 name := """toposoid-deduction-admin-web"""
 organization := "com.ideal.linked"
-version := "0.1.0"
+version := "0.1-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(AutomateHeaderPlugin)
 
