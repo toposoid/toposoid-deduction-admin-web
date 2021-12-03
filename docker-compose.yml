@@ -9,7 +9,7 @@ networks:
 
 services:
   toposoid-deduction-admin-web:
-    image: toposoid/toposoid-deduction-admin-web:0.1.0
+    image: toposoid/toposoid-deduction-admin-web:0.1-SNAPSHOT
     tty: true
     environment:
       - GRAPHDB_HOST=172.30.0.2
@@ -25,7 +25,7 @@ services:
     depends_on:
       - toposoid-deduction-unit-exact-match-web
   toposoid-deduction-unit-exact-match-web:
-    image: toposoid/toposoid-deduction-unit-exact-match-web:0.1.0
+    image: toposoid/toposoid-deduction-unit-exact-match-web:0.1-SNAPSHOT
     tty: true
     environment:
       - PRIVATE_IP_ADDRESS=localhost
@@ -39,7 +39,7 @@ services:
     depends_on:
       - scala-data-accessor-neo4j-web
   toposoid-deduction-unit-synonym-match-web:
-    image: toposoid/toposoid-deduction-unit-synonym-match-web:0.1.0
+    image: toposoid/toposoid-deduction-unit-synonym-match-web:0.1-SNAPSHOT
     tty: true
     environment:
       - PRIVATE_IP_ADDRESS=localhost
