@@ -9,7 +9,7 @@ networks:
 
 services:
   toposoid-deduction-admin-web:
-    image: toposoid-deduction-admin-web:0.1-SNAPSHOT
+    image: toposoid-deduction-admin-web:0.2
     tty: true
     environment:
       - GRAPHDB_HOST=172.30.0.2
@@ -29,7 +29,7 @@ services:
     depends_on:
       - toposoid-deduction-unit-exact-match-web
   toposoid-deduction-unit-exact-match-web:
-    image: toposoid/toposoid-deduction-unit-exact-match-web:0.1-SNAPSHOT-workflow
+    image: toposoid/toposoid-deduction-unit-exact-match-web:0.2-workflow
     tty: true
     environment:
       - GRAPHDB_HOST=172.30.0.2
@@ -44,7 +44,7 @@ services:
     depends_on:
       - scala-data-accessor-neo4j-web
   toposoid-deduction-unit-synonym-match-web:
-    image: toposoid/toposoid-deduction-unit-synonym-match-web:0.1-SNAPSHOT-workflow
+    image: toposoid/toposoid-deduction-unit-synonym-match-web:0.2-workflow
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.11
       - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
@@ -57,7 +57,7 @@ services:
     depends_on:
       - scala-data-accessor-neo4j-web
   scala-data-accessor-neo4j-web:
-    image: toposoid/scala-data-accessor-neo4j-web:0.1-SNAPSHOT-workflow
+    image: toposoid/scala-data-accessor-neo4j-web:0.2-workflow
     environment:
       - GRAPHDB_HOST=172.30.0.2
       - PRIVATE_IP_ADDRESS=172.30.0.3
@@ -70,7 +70,7 @@ services:
     depends_on:
       - neo4j
   toposoid-sentence-parser-japanese-web:
-    image: toposoid/toposoid-sentence-parser-japanese-web:0.1-SNAPSHOT-workflow
+    image: toposoid/toposoid-sentence-parser-japanese-web:0.2-workflow
     tty: true
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.4
@@ -96,7 +96,7 @@ services:
     ports:
       - 9006:9006
   toposoid-sentence-parser-english-web:
-    image: toposoid/toposoid-sentence-parser-english-web:0.1-SNAPSHOT
+    image: toposoid/toposoid-sentence-parser-english-web:0.2
     tty: true
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.6
@@ -108,7 +108,7 @@ services:
     ports:
       - 9007:9007
   toposoid-common-nlp-english-web:
-    image: toposoid/toposoid-common-nlp-english-web:0.1-SNAPSHOT
+    image: toposoid/toposoid-common-nlp-english-web:0.2
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.7
       - SYNONYM_NOUN_SIMILARITY_THRESHHOLD_EN=0.52
