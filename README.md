@@ -64,6 +64,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     "modalityType": "-",
                     "logicType": "-",
                     "nodeType": 1,
+                    "lang": "ja_JP",
                     "extentText": "{}"
                 },
                 "21687cd8-437b-48c6-bd21-210f67cc5e07-2": {
@@ -93,6 +94,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     "modalityType": "-",
                     "logicType": "-",
                     "nodeType": 1,
+                    "lang": "ja_JP",
                     "extentText": "{}"
                 },
                 "21687cd8-437b-48c6-bd21-210f67cc5e07-1": {
@@ -122,6 +124,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     "modalityType": "-",
                     "logicType": "-",
                     "nodeType": 1,
+                    "lang": "ja_JP",
                     "extentText": "{}"
                 },
                 "21687cd8-437b-48c6-bd21-210f67cc5e07-0": {
@@ -151,6 +154,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     "modalityType": "-",
                     "logicType": "-",
                     "nodeType": 1,
+                    "lang": "ja_JP",
                     "extentText": "{}"
                 }
             },
@@ -160,21 +164,24 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     "destinationId": "21687cd8-437b-48c6-bd21-210f67cc5e07-3",
                     "caseStr": "ヲ格",
                     "dependType": "D",
-                    "logicType": "-"
+                    "logicType": "-",
+                    "lang": "ja_JP"
                 },
                 {
                     "sourceId": "21687cd8-437b-48c6-bd21-210f67cc5e07-1",
                     "destinationId": "21687cd8-437b-48c6-bd21-210f67cc5e07-2",
                     "caseStr": "連格",
                     "dependType": "D",
-                    "logicType": "-"
+                    "logicType": "-",
+                    "lang": "ja_JP"
                 },
                 {
                     "sourceId": "21687cd8-437b-48c6-bd21-210f67cc5e07-0",
                     "destinationId": "21687cd8-437b-48c6-bd21-210f67cc5e07-3",
                     "caseStr": "未格",
                     "dependType": "D",
-                    "logicType": "-"
+                    "logicType": "-",
+                    "lang": "ja_JP"
                 }
             ],
             "sentenceType": 1,
