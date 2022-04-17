@@ -34,7 +34,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
 
   override def beforeAll(): Unit = {
     Neo4JAccessor.delete()
-    Sentence2Neo4jTransformer.createGraphAuto(List(Knowledge("Life is so comfortable.","en_US", "{}")))
+    Sentence2Neo4jTransformer.createGraphAuto(List(Knowledge("Life is so comfortable.","en_US", "{}", false)))
   }
 
   override def afterAll(): Unit = {
@@ -101,7 +101,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
@@ -127,7 +127,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
@@ -153,7 +153,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
@@ -179,7 +179,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
@@ -205,7 +205,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
@@ -338,7 +338,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
@@ -364,7 +364,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
@@ -390,7 +390,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
@@ -416,7 +416,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
@@ -442,7 +442,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
                     |                    },
                     |                    "categories": {},
                     |                    "domains": {},
-                    |                    "isDenial": false,
+                    |                    "isDenialWord": false,
                     |                    "isConditionalConnection": false,
                     |                    "normalizedNameYomi": "",
                     |                    "surfaceYomi": "",
