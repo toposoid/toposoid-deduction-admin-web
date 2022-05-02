@@ -16,6 +16,7 @@
 
 package controllers
 
+import akka.util.Timeout
 import com.ideal.linked.data.accessor.neo4j.Neo4JAccessor
 import com.ideal.linked.toposoid.knowledgebase.regist.model.Knowledge
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
@@ -30,36 +31,49 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.{POST, contentAsString, contentType, defaultAwaitTimeout, status, _}
 import play.api.test.{FakeRequest, _}
 
-class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite  with Injecting{
+import scala.concurrent.duration.DurationInt
+
+class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting {
+
+  before {
+    Neo4JAccessor.delete()
+  }
+  after {
+    Neo4JAccessor.delete()
+  }
 
   override def beforeAll(): Unit = {
     Neo4JAccessor.delete()
-    Sentence2Neo4jTransformer.createGraphAuto(List(Knowledge("太郎は秀逸な発案をした。", "ja_JP", "{}" , false)))
   }
 
   override def afterAll(): Unit = {
     Neo4JAccessor.delete()
   }
 
+  override implicit def defaultAwaitTimeout: Timeout = 600.seconds
   val controller: HomeController = inject[HomeController]
   "The specification1-japanese" should {
     "returns an appropriate response" in {
 
-      val json1 = """{
-                    |    "index": 0,
-                    |    "function":{
-                    |        "host": "%s",
-                    |        "port": "9101"
-                    |    }
-                    |}""".stripMargin.format(conf.getString("DEDUCTION_UNIT1_HOST"))
+      Sentence2Neo4jTransformer.createGraphAuto(List(Knowledge("太郎は秀逸な発案をした。", "ja_JP", "{}", false)))
 
-      val json2 = """{
-                    |    "index": 1,
-                    |    "function":{
-                    |        "host": "%s",
-                    |        "port": "9101"
-                    |    }
-                    |}""".stripMargin.format(conf.getString("DEDUCTION_UNIT1_HOST"))
+      val json1 =
+        """{
+          |    "index": 0,
+          |    "function":{
+          |        "host": "%s",
+          |        "port": "9101"
+          |    }
+          |}""".stripMargin.format(conf.getString("DEDUCTION_UNIT1_HOST"))
+
+      val json2 =
+        """{
+          |    "index": 1,
+          |    "function":{
+          |        "host": "%s",
+          |        "port": "9101"
+          |    }
+          |}""".stripMargin.format(conf.getString("DEDUCTION_UNIT1_HOST"))
 
       val fr1 = FakeRequest(POST, "/changeEndPoints")
         .withHeaders("Content-type" -> "application/json")
@@ -80,173 +94,174 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
       assert(contentAsJson(result2).toString().equals("""{"status":"OK"}"""))
 
 
-      val json3 = """{
-                    |    "analyzedSentenceObjects": [
-                    |        {
-                    |            "nodeMap": {
-                    |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-3": {
-                    |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
-                    |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
-                    |                    "currentId": 3,
-                    |                    "parentId": -1,
-                    |                    "isMainSection": true,
-                    |                    "surface": "した。",
-                    |                    "normalizedName": "する",
-                    |                    "dependType": "D",
-                    |                    "caseType": "文末",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {
-                    |                        "": ""
-                    |                    },
-                    |                    "domains": {
-                    |                        "": ""
-                    |                    },
-                    |                    "isDenialWord": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "する",
-                    |                    "surfaceYomi": "した。",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "ja_JP",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-2": {
-                    |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
-                    |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
-                    |                    "currentId": 2,
-                    |                    "parentId": 3,
-                    |                    "isMainSection": false,
-                    |                    "surface": "提案を",
-                    |                    "normalizedName": "提案",
-                    |                    "dependType": "D",
-                    |                    "caseType": "ヲ格",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {
-                    |                        "提案": "抽象物"
-                    |                    },
-                    |                    "domains": {
-                    |                        "": ""
-                    |                    },
-                    |                    "isDenialWord": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "ていあん",
-                    |                    "surfaceYomi": "ていあんを",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "ja_JP",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-1": {
-                    |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
-                    |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
-                    |                    "currentId": 1,
-                    |                    "parentId": 2,
-                    |                    "isMainSection": false,
-                    |                    "surface": "秀逸な",
-                    |                    "normalizedName": "秀逸だ",
-                    |                    "dependType": "D",
-                    |                    "caseType": "連格",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {
-                    |                        "": ""
-                    |                    },
-                    |                    "domains": {
-                    |                        "": ""
-                    |                    },
-                    |                    "isDenialWord": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "しゅういつだ",
-                    |                    "surfaceYomi": "しゅういつな",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "ja_JP",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-0": {
-                    |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
-                    |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
-                    |                    "currentId": 0,
-                    |                    "parentId": 3,
-                    |                    "isMainSection": false,
-                    |                    "surface": "太郎は",
-                    |                    "normalizedName": "太郎",
-                    |                    "dependType": "D",
-                    |                    "caseType": "未格",
-                    |                    "namedEntity": "PERSON:太郎",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {
-                    |                        "": ""
-                    |                    },
-                    |                    "domains": {
-                    |                        "": ""
-                    |                    },
-                    |                    "isDenialWord": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "たろう",
-                    |                    "surfaceYomi": "たろうは",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "ja_JP",
-                    |                    "extentText": "{}"
-                    |                }
-                    |            },
-                    |            "edgeList": [
-                    |                {
-                    |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
-                    |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
-                    |                    "caseStr": "ヲ格",
-                    |                    "dependType": "D",
-                    |                    "logicType": "-",
-                    |                    "lang": "ja_JP"
-                    |                },
-                    |                {
-                    |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
-                    |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
-                    |                    "caseStr": "連格",
-                    |                    "dependType": "D",
-                    |                    "logicType": "-",
-                    |                    "lang": "ja_JP"
-                    |                },
-                    |                {
-                    |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
-                    |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
-                    |                    "caseStr": "未格",
-                    |                    "dependType": "D",
-                    |                    "logicType": "-",
-                    |                    "lang": "ja_JP"
-                    |                }
-                    |            ],
-                    |            "sentenceType": 1,
-                    |            "deductionResultMap": {
-                    |                "0": {
-                    |                    "status": false,
-                    |                    "matchedPropositionIds": [],
-                    |                    "deductionUnit": ""
-                    |                },
-                    |                "1": {
-                    |                    "status": false,
-                    |                    "matchedPropositionIds": [],
-                    |                    "deductionUnit": ""
-                    |                }
-                    |            }
-                    |        }
-                    |    ]
-                    |}""".stripMargin
+      val json3 =
+        """{
+          |    "analyzedSentenceObjects": [
+          |        {
+          |            "nodeMap": {
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-3": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 3,
+          |                    "parentId": -1,
+          |                    "isMainSection": true,
+          |                    "surface": "した。",
+          |                    "normalizedName": "する",
+          |                    "dependType": "D",
+          |                    "caseType": "文末",
+          |                    "namedEntity": "",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "": ""
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "する",
+          |                    "surfaceYomi": "した。",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                },
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-2": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 2,
+          |                    "parentId": 3,
+          |                    "isMainSection": false,
+          |                    "surface": "提案を",
+          |                    "normalizedName": "提案",
+          |                    "dependType": "D",
+          |                    "caseType": "ヲ格",
+          |                    "namedEntity": "",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "提案": "抽象物"
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "ていあん",
+          |                    "surfaceYomi": "ていあんを",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                },
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-1": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 1,
+          |                    "parentId": 2,
+          |                    "isMainSection": false,
+          |                    "surface": "秀逸な",
+          |                    "normalizedName": "秀逸だ",
+          |                    "dependType": "D",
+          |                    "caseType": "連格",
+          |                    "namedEntity": "",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "": ""
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "しゅういつだ",
+          |                    "surfaceYomi": "しゅういつな",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                },
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-0": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 0,
+          |                    "parentId": 3,
+          |                    "isMainSection": false,
+          |                    "surface": "太郎は",
+          |                    "normalizedName": "太郎",
+          |                    "dependType": "D",
+          |                    "caseType": "未格",
+          |                    "namedEntity": "PERSON:太郎",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "": ""
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "たろう",
+          |                    "surfaceYomi": "たろうは",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                }
+          |            },
+          |            "edgeList": [
+          |                {
+          |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
+          |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
+          |                    "caseStr": "ヲ格",
+          |                    "dependType": "D",
+          |                    "logicType": "-",
+          |                    "lang": "ja_JP"
+          |                },
+          |                {
+          |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
+          |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
+          |                    "caseStr": "連格",
+          |                    "dependType": "D",
+          |                    "logicType": "-",
+          |                    "lang": "ja_JP"
+          |                },
+          |                {
+          |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
+          |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
+          |                    "caseStr": "未格",
+          |                    "dependType": "D",
+          |                    "logicType": "-",
+          |                    "lang": "ja_JP"
+          |                }
+          |            ],
+          |            "sentenceType": 1,
+          |            "deductionResultMap": {
+          |                "0": {
+          |                    "status": false,
+          |                    "matchedPropositionIds": [],
+          |                    "deductionUnit": ""
+          |                },
+          |                "1": {
+          |                    "status": false,
+          |                    "matchedPropositionIds": [],
+          |                    "deductionUnit": ""
+          |                }
+          |            }
+          |        }
+          |    ]
+          |}""".stripMargin
 
       val fr3 = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json")
@@ -256,7 +271,7 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
       status(result3) mustBe OK
       contentType(result3) mustBe Some("application/json")
 
-      val jsonResult =contentAsJson(result3).toString()
+      val jsonResult = contentAsJson(result3).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       assert(analyzedSentenceObjects.analyzedSentenceObjects.filterNot(_.deductionResultMap.get("1").get.status).size == 1)
     }
@@ -265,21 +280,25 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
   "The specification2-japanese" should {
     "returns an appropriate response" in {
 
-      val json1 = """{
-                    |    "index": 0,
-                    |    "function":{
-                    |        "host": "%s",
-                    |        "port": "9101"
-                    |    }
-                    |}""".stripMargin.format(conf.getString("DEDUCTION_UNIT1_HOST"))
+      Sentence2Neo4jTransformer.createGraphAuto(List(Knowledge("太郎は秀逸な発案をした。", "ja_JP", "{}", false)))
 
-      val json2 = """{
-                    |    "index": 1,
-                    |    "function":{
-                    |        "host": "%s",
-                    |        "port": "9102"
-                    |    }
-                    |}""".stripMargin.format(conf.getString("DEDUCTION_UNIT2_HOST"))
+      val json1 =
+        """{
+          |    "index": 0,
+          |    "function":{
+          |        "host": "%s",
+          |        "port": "9101"
+          |    }
+          |}""".stripMargin.format(conf.getString("DEDUCTION_UNIT1_HOST"))
+
+      val json2 =
+        """{
+          |    "index": 1,
+          |    "function":{
+          |        "host": "%s",
+          |        "port": "9102"
+          |    }
+          |}""".stripMargin.format(conf.getString("DEDUCTION_UNIT2_HOST"))
 
       val fr1 = FakeRequest(POST, "/changeEndPoints")
         .withHeaders("Content-type" -> "application/json")
@@ -299,173 +318,174 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
       contentType(result2) mustBe Some("application/json")
       assert(contentAsJson(result2).toString().equals("""{"status":"OK"}"""))
 
-      val json3 = """{
-                    |    "analyzedSentenceObjects": [
-                    |        {
-                    |            "nodeMap": {
-                    |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-3": {
-                    |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
-                    |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
-                    |                    "currentId": 3,
-                    |                    "parentId": -1,
-                    |                    "isMainSection": true,
-                    |                    "surface": "した。",
-                    |                    "normalizedName": "する",
-                    |                    "dependType": "D",
-                    |                    "caseType": "文末",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {
-                    |                        "": ""
-                    |                    },
-                    |                    "domains": {
-                    |                        "": ""
-                    |                    },
-                    |                    "isDenialWord": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "する",
-                    |                    "surfaceYomi": "した。",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "ja_JP",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-2": {
-                    |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
-                    |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
-                    |                    "currentId": 2,
-                    |                    "parentId": 3,
-                    |                    "isMainSection": false,
-                    |                    "surface": "提案を",
-                    |                    "normalizedName": "提案",
-                    |                    "dependType": "D",
-                    |                    "caseType": "ヲ格",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {
-                    |                        "提案": "抽象物"
-                    |                    },
-                    |                    "domains": {
-                    |                        "": ""
-                    |                    },
-                    |                    "isDenialWord": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "ていあん",
-                    |                    "surfaceYomi": "ていあんを",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "ja_JP",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-1": {
-                    |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
-                    |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
-                    |                    "currentId": 1,
-                    |                    "parentId": 2,
-                    |                    "isMainSection": false,
-                    |                    "surface": "秀逸な",
-                    |                    "normalizedName": "秀逸だ",
-                    |                    "dependType": "D",
-                    |                    "caseType": "連格",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {
-                    |                        "": ""
-                    |                    },
-                    |                    "domains": {
-                    |                        "": ""
-                    |                    },
-                    |                    "isDenialWord": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "しゅういつだ",
-                    |                    "surfaceYomi": "しゅういつな",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "ja_JP",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-0": {
-                    |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
-                    |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
-                    |                    "currentId": 0,
-                    |                    "parentId": 3,
-                    |                    "isMainSection": false,
-                    |                    "surface": "太郎は",
-                    |                    "normalizedName": "太郎",
-                    |                    "dependType": "D",
-                    |                    "caseType": "未格",
-                    |                    "namedEntity": "PERSON:太郎",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {
-                    |                        "": ""
-                    |                    },
-                    |                    "domains": {
-                    |                        "": ""
-                    |                    },
-                    |                    "isDenialWord": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "たろう",
-                    |                    "surfaceYomi": "たろうは",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "ja_JP",
-                    |                    "extentText": "{}"
-                    |                }
-                    |            },
-                    |            "edgeList": [
-                    |                {
-                    |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
-                    |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
-                    |                    "caseStr": "ヲ格",
-                    |                    "dependType": "D",
-                    |                    "logicType": "-",
-                    |                    "lang": "ja_JP"
-                    |                },
-                    |                {
-                    |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
-                    |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
-                    |                    "caseStr": "連格",
-                    |                    "dependType": "D",
-                    |                    "logicType": "-",
-                    |                    "lang": "ja_JP"
-                    |                },
-                    |                {
-                    |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
-                    |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
-                    |                    "caseStr": "未格",
-                    |                    "dependType": "D",
-                    |                    "logicType": "-",
-                    |                    "lang": "ja_JP"
-                    |                }
-                    |            ],
-                    |            "sentenceType": 1,
-                    |            "deductionResultMap": {
-                    |                "0": {
-                    |                    "status": false,
-                    |                    "matchedPropositionIds": [],
-                    |                    "deductionUnit": ""
-                    |                },
-                    |                "1": {
-                    |                    "status": false,
-                    |                    "matchedPropositionIds": [],
-                    |                    "deductionUnit": ""
-                    |                }
-                    |            }
-                    |        }
-                    |    ]
-                    |}""".stripMargin
+      val json3 =
+        """{
+          |    "analyzedSentenceObjects": [
+          |        {
+          |            "nodeMap": {
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-3": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 3,
+          |                    "parentId": -1,
+          |                    "isMainSection": true,
+          |                    "surface": "した。",
+          |                    "normalizedName": "する",
+          |                    "dependType": "D",
+          |                    "caseType": "文末",
+          |                    "namedEntity": "",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "": ""
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "する",
+          |                    "surfaceYomi": "した。",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                },
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-2": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 2,
+          |                    "parentId": 3,
+          |                    "isMainSection": false,
+          |                    "surface": "提案を",
+          |                    "normalizedName": "提案",
+          |                    "dependType": "D",
+          |                    "caseType": "ヲ格",
+          |                    "namedEntity": "",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "提案": "抽象物"
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "ていあん",
+          |                    "surfaceYomi": "ていあんを",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                },
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-1": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 1,
+          |                    "parentId": 2,
+          |                    "isMainSection": false,
+          |                    "surface": "秀逸な",
+          |                    "normalizedName": "秀逸だ",
+          |                    "dependType": "D",
+          |                    "caseType": "連格",
+          |                    "namedEntity": "",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "": ""
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "しゅういつだ",
+          |                    "surfaceYomi": "しゅういつな",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                },
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-0": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 0,
+          |                    "parentId": 3,
+          |                    "isMainSection": false,
+          |                    "surface": "太郎は",
+          |                    "normalizedName": "太郎",
+          |                    "dependType": "D",
+          |                    "caseType": "未格",
+          |                    "namedEntity": "PERSON:太郎",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "": ""
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "たろう",
+          |                    "surfaceYomi": "たろうは",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                }
+          |            },
+          |            "edgeList": [
+          |                {
+          |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
+          |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
+          |                    "caseStr": "ヲ格",
+          |                    "dependType": "D",
+          |                    "logicType": "-",
+          |                    "lang": "ja_JP"
+          |                },
+          |                {
+          |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
+          |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
+          |                    "caseStr": "連格",
+          |                    "dependType": "D",
+          |                    "logicType": "-",
+          |                    "lang": "ja_JP"
+          |                },
+          |                {
+          |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
+          |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
+          |                    "caseStr": "未格",
+          |                    "dependType": "D",
+          |                    "logicType": "-",
+          |                    "lang": "ja_JP"
+          |                }
+          |            ],
+          |            "sentenceType": 1,
+          |            "deductionResultMap": {
+          |                "0": {
+          |                    "status": false,
+          |                    "matchedPropositionIds": [],
+          |                    "deductionUnit": ""
+          |                },
+          |                "1": {
+          |                    "status": false,
+          |                    "matchedPropositionIds": [],
+          |                    "deductionUnit": ""
+          |                }
+          |            }
+          |        }
+          |    ]
+          |}""".stripMargin
 
       val fr3 = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json")
@@ -475,11 +495,196 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
       status(result3) mustBe OK
       contentType(result3) mustBe Some("application/json")
 
-      val jsonResult =contentAsJson(result3).toString()
+      val jsonResult = contentAsJson(result3).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.status).size == 1)
 
     }
   }
-}
 
+  "The deduction that noo4j has no data" should {
+    "returns an appropriate response" in {
+      val json =
+        """{
+          |    "analyzedSentenceObjects": [
+          |        {
+          |            "nodeMap": {
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-3": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 3,
+          |                    "parentId": -1,
+          |                    "isMainSection": true,
+          |                    "surface": "した。",
+          |                    "normalizedName": "する",
+          |                    "dependType": "D",
+          |                    "caseType": "文末",
+          |                    "namedEntity": "",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "": ""
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "する",
+          |                    "surfaceYomi": "した。",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                },
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-2": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 2,
+          |                    "parentId": 3,
+          |                    "isMainSection": false,
+          |                    "surface": "提案を",
+          |                    "normalizedName": "提案",
+          |                    "dependType": "D",
+          |                    "caseType": "ヲ格",
+          |                    "namedEntity": "",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "提案": "抽象物"
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "ていあん",
+          |                    "surfaceYomi": "ていあんを",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                },
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-1": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 1,
+          |                    "parentId": 2,
+          |                    "isMainSection": false,
+          |                    "surface": "秀逸な",
+          |                    "normalizedName": "秀逸だ",
+          |                    "dependType": "D",
+          |                    "caseType": "連格",
+          |                    "namedEntity": "",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "": ""
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "しゅういつだ",
+          |                    "surfaceYomi": "しゅういつな",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                },
+          |                "781d77ce-746f-4d86-8392-dacae3f6c9d2-0": {
+          |                    "nodeId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
+          |                    "propositionId": "781d77ce-746f-4d86-8392-dacae3f6c9d2",
+          |                    "currentId": 0,
+          |                    "parentId": 3,
+          |                    "isMainSection": false,
+          |                    "surface": "太郎は",
+          |                    "normalizedName": "太郎",
+          |                    "dependType": "D",
+          |                    "caseType": "未格",
+          |                    "namedEntity": "PERSON:太郎",
+          |                    "rangeExpressions": {
+          |                        "": {}
+          |                    },
+          |                    "categories": {
+          |                        "": ""
+          |                    },
+          |                    "domains": {
+          |                        "": ""
+          |                    },
+          |                    "isDenialWord": false,
+          |                    "isConditionalConnection": false,
+          |                    "normalizedNameYomi": "たろう",
+          |                    "surfaceYomi": "たろうは",
+          |                    "modalityType": "-",
+          |                    "logicType": "-",
+          |                    "nodeType": 1,
+          |                    "lang": "ja_JP",
+          |                    "extentText": "{}"
+          |                }
+          |            },
+          |            "edgeList": [
+          |                {
+          |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
+          |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
+          |                    "caseStr": "ヲ格",
+          |                    "dependType": "D",
+          |                    "logicType": "-",
+          |                    "lang": "ja_JP"
+          |                },
+          |                {
+          |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-1",
+          |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-2",
+          |                    "caseStr": "連格",
+          |                    "dependType": "D",
+          |                    "logicType": "-",
+          |                    "lang": "ja_JP"
+          |                },
+          |                {
+          |                    "sourceId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-0",
+          |                    "destinationId": "781d77ce-746f-4d86-8392-dacae3f6c9d2-3",
+          |                    "caseStr": "未格",
+          |                    "dependType": "D",
+          |                    "logicType": "-",
+          |                    "lang": "ja_JP"
+          |                }
+          |            ],
+          |            "sentenceType": 1,
+          |            "deductionResultMap": {
+          |                "0": {
+          |                    "status": false,
+          |                    "matchedPropositionIds": [],
+          |                    "deductionUnit": ""
+          |                },
+          |                "1": {
+          |                    "status": false,
+          |                    "matchedPropositionIds": [],
+          |                    "deductionUnit": ""
+          |                }
+          |            }
+          |        }
+          |    ]
+          |}""".stripMargin
+
+      val fr3 = FakeRequest(POST, "/executeDeduction")
+        .withHeaders("Content-type" -> "application/json")
+        .withJsonBody(Json.parse(json))
+
+      val result3 = call(controller.executeDeduction(), fr3)
+      status(result3) mustBe OK
+      contentType(result3) mustBe Some("application/json")
+
+      val jsonResult = contentAsJson(result3).toString()
+      val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("0").get.status).size == 0)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.status).size == 0)
+    }
+  }
+}

@@ -29,6 +29,7 @@ import akka.stream.scaladsl._
 import akka.stream.{ActorMaterializer, ClosedShape}
 import akka.stream.scaladsl.{Flow, GraphDSL, Sink, Source}
 import com.ideal.linked.common.DeploymentConverter.conf
+import com.ideal.linked.toposoid.deduction.common.FacadeForAccessNeo4J.getCypherQueryResult
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -86,39 +87,38 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
 
       val json = request.body
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(json.toString).as[AnalyzedSentenceObjects]
-
-      implicit val system = ActorSystem("my-system")
-      implicit val materializer = ActorMaterializer()
-      implicit val executionContext = system.dispatcher
-
-      val in = Source(endPoints.to[scala.collection.immutable.Seq])
-
-      val out = Sink.seq[String]
-
       targetJson = json.toString()
-      val g = RunnableGraph.fromGraph(GraphDSL.create(out) { implicit builder => o =>
-        import GraphDSL.Implicits._
-        val flow = builder.add(Flow[Endpoint].map(deduce(_)))
-        in ~> flow ~>  o
-        ClosedShape
-      })
-      val hoge = g.run()
-      var resultJson = ""
-      hoge.onComplete {
-        case Success(js) =>
-          println(s"Success: $js")
-          println("---------------------------------------------------")
-          resultJson = js.last
-        case Failure(e) =>
-          println(s"Failure: $e")
-      }
-      while(!hoge.isCompleted){
-        Thread.sleep(20)
-      }
 
+      val jsonStr:String = getCypherQueryResult("MATCH (n) RETURN n limit 1;", "")
+      if(!jsonStr.equals("""{"records":[]}""")){
+
+        implicit val system = ActorSystem("my-system")
+        implicit val materializer = ActorMaterializer()
+        implicit val executionContext = system.dispatcher
+
+        val in = Source(endPoints.to[scala.collection.immutable.Seq])
+        val out = Sink.seq[String]
+        val g = RunnableGraph.fromGraph(GraphDSL.create(out) { implicit builder => o =>
+          import GraphDSL.Implicits._
+          val flow = builder.add(Flow[Endpoint].map(deduce(_)))
+          in ~> flow ~>  o
+          ClosedShape
+        })
+        val hoge = g.run()
+        var resultJson = ""
+        hoge.onComplete {
+          case Success(js) =>
+            println(s"Success: $js")
+            println("---------------------------------------------------")
+            resultJson = js.last
+          case Failure(e) =>
+            println(s"Failure: $e")
+        }
+        while(!hoge.isCompleted){
+          Thread.sleep(20)
+        }
+      }
       print("check")
-
-
       Ok(targetJson).as(JSON)
 
     }catch {
