@@ -5,6 +5,10 @@ This microservice provides the ability to manage multiple deductive inference lo
 
 [![Unit Test And Build Image Action](https://github.com/toposoid/toposoid-deduction-admin-web/actions/workflows/action.yml/badge.svg?branch=main)](https://github.com/toposoid/toposoid-deduction-admin-web/actions/workflows/action.yml)
 
+The functions of this microservice are in the red frame below.
+<img width="1136" alt="" src="https://user-images.githubusercontent.com/82787843/169642794-6cf4c50f-a7e5-4688-bf3e-9994dfbedbc8.png">
+
+- API Image
 <img width="1201" alt="2021-10-01 20 31 35" src="https://user-images.githubusercontent.com/82787843/135613475-1431ddaa-5a4c-4f82-8346-51b41987da2e.png">
 
 <img width="1204" alt="2021-10-01 20 33 42" src="https://user-images.githubusercontent.com/82787843/135613393-dd124dc0-0f81-4839-85d2-10ba2e9d2281.png">
@@ -57,7 +61,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     "domains": {
                         "": ""
                     },
-                    "isDenial": false,
+                    "isDenialWord": false,
                     "isConditionalConnection": false,
                     "normalizedNameYomi": "する",
                     "surfaceYomi": "した。",
@@ -87,7 +91,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     "domains": {
                         "": ""
                     },
-                    "isDenial": false,
+                    "isDenialWord": false,
                     "isConditionalConnection": false,
                     "normalizedNameYomi": "はつあん",
                     "surfaceYomi": "はつあんを",
@@ -117,7 +121,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     "domains": {
                         "": ""
                     },
-                    "isDenial": false,
+                    "isDenialWord": false,
                     "isConditionalConnection": false,
                     "normalizedNameYomi": "しゅういつだ",
                     "surfaceYomi": "しゅういつな",
@@ -147,7 +151,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     "domains": {
                         "": ""
                     },
-                    "isDenial": false,
+                    "isDenialWord": false,
                     "isConditionalConnection": false,
                     "normalizedNameYomi": "たろう",
                     "surfaceYomi": "たろうは",
