@@ -16,10 +16,13 @@
 
 package controllers
 
+import akka.util.Timeout
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.data.accessor.neo4j.Neo4JAccessor
+import com.ideal.linked.toposoid.common.ToposoidUtils
 import com.ideal.linked.toposoid.knowledgebase.regist.model.Knowledge
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
+import com.ideal.linked.toposoid.protocol.model.parser.InputSentence
 import com.ideal.linked.toposoid.sentence.transformer.neo4j.Sentence2Neo4jTransformer
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.play.PlaySpec
@@ -30,17 +33,20 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.{POST, contentType, defaultAwaitTimeout, status, _}
 import play.api.test.{FakeRequest, _}
 
-class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite  with Injecting{
+import scala.concurrent.duration.DurationInt
+
+class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting{
 
   override def beforeAll(): Unit = {
     Neo4JAccessor.delete()
-    Sentence2Neo4jTransformer.createGraphAuto(List(Knowledge("Life is so comfortable.","en_US", "{}")))
+    Sentence2Neo4jTransformer.createGraphAuto(List(Knowledge("Life is so comfortable.","en_US", "{}", false)))
   }
 
   override def afterAll(): Unit = {
     Neo4JAccessor.delete()
   }
 
+  override implicit def defaultAwaitTimeout: Timeout = 600.seconds
   val controller: HomeController = inject[HomeController]
 
   "The specification1-english" should {
@@ -80,192 +86,8 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       contentType(result2) mustBe Some("application/json")
       assert(contentAsJson(result2).toString().equals("""{"status":"OK"}"""))
 
-
-      val json3 = """{
-                    |    "analyzedSentenceObjects": [
-                    |        {
-                    |            "nodeMap": {
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-0": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-0",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 0,
-                    |                    "parentId": 1,
-                    |                    "isMainSection": true,
-                    |                    "surface": "Living",
-                    |                    "normalizedName": "living",
-                    |                    "dependType": "-",
-                    |                    "caseType": "nsubj",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 1,
-                    |                    "parentId": 1,
-                    |                    "isMainSection": true,
-                    |                    "surface": "is",
-                    |                    "normalizedName": "be",
-                    |                    "dependType": "-",
-                    |                    "caseType": "ROOT",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-2": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-2",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 2,
-                    |                    "parentId": 3,
-                    |                    "isMainSection": true,
-                    |                    "surface": "so",
-                    |                    "normalizedName": "so",
-                    |                    "dependType": "-",
-                    |                    "caseType": "advmod",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-3": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-3",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 3,
-                    |                    "parentId": 1,
-                    |                    "isMainSection": true,
-                    |                    "surface": "comfortable",
-                    |                    "normalizedName": "comfortable",
-                    |                    "dependType": "-",
-                    |                    "caseType": "acomp",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-4": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-4",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 4,
-                    |                    "parentId": 1,
-                    |                    "isMainSection": true,
-                    |                    "surface": ".",
-                    |                    "normalizedName": ".",
-                    |                    "dependType": "-",
-                    |                    "caseType": "punct",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                }
-                    |            },
-                    |            "edgeList": [
-                    |                {
-                    |                    "sourceId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-0",
-                    |                    "destinationId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1",
-                    |                    "caseStr": "nsubj",
-                    |                    "dependType": "-",
-                    |                    "logicType": "-",
-                    |                    "lang": "en_US"
-                    |                },
-                    |                {
-                    |                    "sourceId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-2",
-                    |                    "destinationId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-3",
-                    |                    "caseStr": "advmod",
-                    |                    "dependType": "-",
-                    |                    "logicType": "-",
-                    |                    "lang": "en_US"
-                    |                },
-                    |                {
-                    |                    "sourceId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-3",
-                    |                    "destinationId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1",
-                    |                    "caseStr": "acomp",
-                    |                    "dependType": "-",
-                    |                    "logicType": "-",
-                    |                    "lang": "en_US"
-                    |                },
-                    |                {
-                    |                    "sourceId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-4",
-                    |                    "destinationId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1",
-                    |                    "caseStr": "punct",
-                    |                    "dependType": "-",
-                    |                    "logicType": "-",
-                    |                    "lang": "en_US"
-                    |                }
-                    |            ],
-                    |            "sentenceType": 1,
-                    |            "deductionResultMap": {
-                    |                "0": {
-                    |                    "status": false,
-                    |                    "matchedPropositionIds": [],
-                    |                    "deductionUnit": ""
-                    |                },
-                    |                "1": {
-                    |                    "status": false,
-                    |                    "matchedPropositionIds": [],
-                    |                    "deductionUnit": ""
-                    |                }
-                    |            }
-                    |        }
-                    |    ]
-                    |}""".stripMargin
+      val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("Living is so comfortable.","en_US", "{}", false)))).toString()
+      val json3 = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_EN_WEB_HOST"), "9007", "analyze")
 
       val fr3 = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json")
@@ -318,191 +140,8 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       contentType(result2) mustBe Some("application/json")
       assert(contentAsJson(result2).toString().equals("""{"status":"OK"}"""))
 
-      val json3 = """{
-                    |    "analyzedSentenceObjects": [
-                    |        {
-                    |            "nodeMap": {
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-0": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-0",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 0,
-                    |                    "parentId": 1,
-                    |                    "isMainSection": true,
-                    |                    "surface": "Living",
-                    |                    "normalizedName": "living",
-                    |                    "dependType": "-",
-                    |                    "caseType": "nsubj",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 1,
-                    |                    "parentId": 1,
-                    |                    "isMainSection": true,
-                    |                    "surface": "is",
-                    |                    "normalizedName": "be",
-                    |                    "dependType": "-",
-                    |                    "caseType": "ROOT",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-2": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-2",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 2,
-                    |                    "parentId": 3,
-                    |                    "isMainSection": true,
-                    |                    "surface": "so",
-                    |                    "normalizedName": "so",
-                    |                    "dependType": "-",
-                    |                    "caseType": "advmod",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-3": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-3",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 3,
-                    |                    "parentId": 1,
-                    |                    "isMainSection": true,
-                    |                    "surface": "comfortable",
-                    |                    "normalizedName": "comfortable",
-                    |                    "dependType": "-",
-                    |                    "caseType": "acomp",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                },
-                    |                "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-4": {
-                    |                    "nodeId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-4",
-                    |                    "propositionId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a",
-                    |                    "currentId": 4,
-                    |                    "parentId": 1,
-                    |                    "isMainSection": true,
-                    |                    "surface": ".",
-                    |                    "normalizedName": ".",
-                    |                    "dependType": "-",
-                    |                    "caseType": "punct",
-                    |                    "namedEntity": "",
-                    |                    "rangeExpressions": {
-                    |                        "": {}
-                    |                    },
-                    |                    "categories": {},
-                    |                    "domains": {},
-                    |                    "isDenial": false,
-                    |                    "isConditionalConnection": false,
-                    |                    "normalizedNameYomi": "",
-                    |                    "surfaceYomi": "",
-                    |                    "modalityType": "-",
-                    |                    "logicType": "-",
-                    |                    "nodeType": 1,
-                    |                    "lang": "en_US",
-                    |                    "extentText": "{}"
-                    |                }
-                    |            },
-                    |            "edgeList": [
-                    |                {
-                    |                    "sourceId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-0",
-                    |                    "destinationId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1",
-                    |                    "caseStr": "nsubj",
-                    |                    "dependType": "-",
-                    |                    "logicType": "-",
-                    |                    "lang": "en_US"
-                    |                },
-                    |                {
-                    |                    "sourceId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-2",
-                    |                    "destinationId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-3",
-                    |                    "caseStr": "advmod",
-                    |                    "dependType": "-",
-                    |                    "logicType": "-",
-                    |                    "lang": "en_US"
-                    |                },
-                    |                {
-                    |                    "sourceId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-3",
-                    |                    "destinationId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1",
-                    |                    "caseStr": "acomp",
-                    |                    "dependType": "-",
-                    |                    "logicType": "-",
-                    |                    "lang": "en_US"
-                    |                },
-                    |                {
-                    |                    "sourceId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-4",
-                    |                    "destinationId": "a8ab4e4c-8ec3-448e-ad4c-1c41ee1f7b6a-1",
-                    |                    "caseStr": "punct",
-                    |                    "dependType": "-",
-                    |                    "logicType": "-",
-                    |                    "lang": "en_US"
-                    |                }
-                    |            ],
-                    |            "sentenceType": 1,
-                    |            "deductionResultMap": {
-                    |                "0": {
-                    |                    "status": false,
-                    |                    "matchedPropositionIds": [],
-                    |                    "deductionUnit": ""
-                    |                },
-                    |                "1": {
-                    |                    "status": false,
-                    |                    "matchedPropositionIds": [],
-                    |                    "deductionUnit": ""
-                    |                }
-                    |            }
-                    |        }
-                    |    ]
-                    |}""".stripMargin
+      val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("Living is so comfortable.","en_US", "{}", false)))).toString()
+      val json3 = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_EN_WEB_HOST"), "9007", "analyze")
 
       val fr3 = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json")
@@ -519,4 +158,3 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
     }
   }
 }
-
