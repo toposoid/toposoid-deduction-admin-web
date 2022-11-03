@@ -32,7 +32,7 @@ import play.api.http.Status.OK
 import play.api.libs.json.Json
 import play.api.test.Helpers.{POST, contentAsString, contentType, defaultAwaitTimeout, status, _}
 import play.api.test.{FakeRequest, _}
-
+import io.jvm.uuid.UUID
 import scala.concurrent.duration.DurationInt
 
 class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting {
@@ -57,7 +57,7 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
   "The specification1-japanese" should {
     "returns an appropriate response" in {
 
-      Sentence2Neo4jTransformer.createGraphAuto(List(Knowledge("太郎は秀逸な発案をした。", "ja_JP", "{}", false)))
+      Sentence2Neo4jTransformer.createGraphAuto(List(UUID.random.toString), List(Knowledge("太郎は秀逸な発案をした。", "ja_JP", "{}", false)))
 
       val json1 =
         """{
@@ -115,7 +115,7 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
   "The specification2-japanese" should {
     "returns an appropriate response" in {
 
-      Sentence2Neo4jTransformer.createGraphAuto(List(Knowledge("太郎は秀逸な発案をした。", "ja_JP", "{}", false)))
+      Sentence2Neo4jTransformer.createGraphAuto(List(UUID.random.toString), List(Knowledge("太郎は秀逸な発案をした。", "ja_JP", "{}", false)))
 
       val json1 =
         """{
