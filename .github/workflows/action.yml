@@ -12,7 +12,7 @@ env:
   PJ_VERSION: 0.4-SNAPSHOT
 jobs:
   unit-test_toposoid-deduction-admin-web:
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
     steps:
       - name: Clone ${{ env.PJ_REPO }}
         uses: actions/checkout@v2
@@ -36,7 +36,6 @@ jobs:
             docker-compose -f docker-compose-workflow.yml rm -fsv toposoid-sentence-parser-japanese-web
             docker rmi --force toposoid/toposoid-sentence-parser-japanese-web:0.4-SNAPSHOT-workflow
             docker rmi --force toposoid/toposoid-common-nlp-japanese-web:0.4-SNAPSHOT-workflow
-            docker images
             docker system prune -f
             docker volume prune -f
             docker-compose -f docker-compose-workflow.yml up -d corenlp
