@@ -18,12 +18,12 @@ package controllers
 
 import akka.util.Timeout
 import com.ideal.linked.data.accessor.neo4j.Neo4JAccessor
-import com.ideal.linked.toposoid.knowledgebase.regist.model.Knowledge
+import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, PropositionRelation}
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
 import com.ideal.linked.toposoid.sentence.transformer.neo4j.Sentence2Neo4jTransformer
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.toposoid.common.ToposoidUtils
-import com.ideal.linked.toposoid.protocol.model.parser.InputSentence
+import com.ideal.linked.toposoid.protocol.model.parser.{InputSentence, InputSentenceForParser, KnowledgeForParser, KnowledgeSentenceSetForParser}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -33,6 +33,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.{POST, contentAsString, contentType, defaultAwaitTimeout, status, _}
 import play.api.test.{FakeRequest, _}
 import io.jvm.uuid.UUID
+
 import scala.concurrent.duration.DurationInt
 
 class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting {
@@ -52,12 +53,27 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
     Neo4JAccessor.delete()
   }
 
+  def registSingleClaim(knowledgeForParser:KnowledgeForParser): Unit = {
+    val knowledgeSentenceSetForParser = KnowledgeSentenceSetForParser(
+      List.empty[KnowledgeForParser],
+      List.empty[PropositionRelation],
+      List(knowledgeForParser),
+      List.empty[PropositionRelation])
+    Sentence2Neo4jTransformer.createGraph(knowledgeSentenceSetForParser)
+  }
+
   override implicit def defaultAwaitTimeout: Timeout = 600.seconds
   val controller: HomeController = inject[HomeController]
+
   "The specification1-japanese" should {
     "returns an appropriate response" in {
-
-      Sentence2Neo4jTransformer.createGraphAuto(List(UUID.random.toString), List(Knowledge("太郎は秀逸な発案をした。", "ja_JP", "{}", false)))
+      val sentenceA = "太郎は秀逸な発案をした。"
+      val paraphraseA = "太郎は秀逸な提案をした。"
+      val propositionId1 = UUID.random.toString
+      val sentenceId1 = UUID.random.toString
+      val knowledge1 = Knowledge(sentenceA, "ja_JP", "{}", false)
+      val paraphrase1 = Knowledge(paraphraseA,"ja_JP", "{}", false)
+      registSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1))
 
       val json1 =
         """{
@@ -95,7 +111,11 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
       contentType(result2) mustBe Some("application/json")
       assert(contentAsJson(result2).toString().equals("""{"status":"OK"}"""))
 
-      val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("太郎は秀逸な提案をした。","ja_JP", "{}", false)))).toString()
+      val propositionIdForInference = UUID.random.toString
+      val premiseKnowledge = List.empty[KnowledgeForParser]
+      val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, UUID.random.toString, paraphrase1))
+      val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
+
       val json3 = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_JP_WEB_HOST"), "9001", "analyze")
 
       val fr3 = FakeRequest(POST, "/executeDeduction")
@@ -114,8 +134,14 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
 
   "The specification2-japanese" should {
     "returns an appropriate response" in {
+      val sentenceA = "太郎は秀逸な発案をした。"
+      val paraphraseA = "太郎は秀逸な提案をした。"
+      val propositionId1 = UUID.random.toString
+      val sentenceId1 = UUID.random.toString
 
-      Sentence2Neo4jTransformer.createGraphAuto(List(UUID.random.toString), List(Knowledge("太郎は秀逸な発案をした。", "ja_JP", "{}", false)))
+      val knowledge1 = Knowledge(sentenceA, "ja_JP", "{}", false)
+      val paraphrase1 = Knowledge(paraphraseA,"ja_JP", "{}", false)
+      registSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1))
 
       val json1 =
         """{
@@ -153,7 +179,11 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
       contentType(result2) mustBe Some("application/json")
       assert(contentAsJson(result2).toString().equals("""{"status":"OK"}"""))
 
-      val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("太郎は秀逸な提案をした。","ja_JP", "{}", false)))).toString()
+      val propositionIdForInference = UUID.random.toString
+      val premiseKnowledge = List.empty[KnowledgeForParser]
+      val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, UUID.random.toString, paraphrase1))
+      val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
+
       val json3 = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_JP_WEB_HOST"), "9001", "analyze")
 
       val fr3 = FakeRequest(POST, "/executeDeduction")
@@ -173,7 +203,12 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
 
   "The deduction that noo4j has no data" should {
     "returns an appropriate response" in {
-      val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("太郎は秀逸な提案をした。","ja_JP", "{}", false)))).toString()
+      val paraphraseA = "太郎は秀逸な提案をした。"
+      val paraphrase1 = Knowledge(paraphraseA,"ja_JP", "{}", false)
+      val propositionIdForInference = UUID.random.toString
+      val premiseKnowledge = List.empty[KnowledgeForParser]
+      val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, UUID.random.toString, paraphrase1))
+      val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
       val json = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_JP_WEB_HOST"), "9001", "analyze")
 
       val fr3 = FakeRequest(POST, "/executeDeduction")
@@ -190,6 +225,8 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
       assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.status).size == 0)
     }
   }
+
+
 }
 
 
