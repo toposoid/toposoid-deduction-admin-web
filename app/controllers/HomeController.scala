@@ -54,7 +54,10 @@ object ReqSelector {
 @Singleton
 class HomeController @Inject()(val controllerComponents: ControllerComponents) extends BaseController with LazyLogging{
 
-  val defaultEndPoints:Seq[Endpoint] = Seq(Endpoint(conf.getString("DEDUCTION_UNIT1_HOST"), port="9101"),  Endpoint(conf.getString("DEDUCTION_UNIT2_HOST"), port="9102"))
+  val defaultEndPoints:Seq[Endpoint] = Seq(
+    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT1_HOST"), port="9101"),
+    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT2_HOST"), port="9102"),
+    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT3_HOST"), port="9103"))
   var endPoints:Seq[Endpoint] = defaultEndPoints
   var targetJson:String = ""
 
