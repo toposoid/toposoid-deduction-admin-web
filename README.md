@@ -9,9 +9,10 @@ The functions of this microservice are in the red frame below.
 <img width="1136" alt="" src="https://user-images.githubusercontent.com/82787843/169642794-6cf4c50f-a7e5-4688-bf3e-9994dfbedbc8.png">
 
 - API Image
-<img width="1201" alt="2021-10-01 20 31 35" src="https://user-images.githubusercontent.com/82787843/135613475-1431ddaa-5a4c-4f82-8346-51b41987da2e.png">
+<img width="1201" src="https://user-images.githubusercontent.com/82787843/135613475-1431ddaa-5a4c-4f82-8346-51b41987da2e.png">
 
-<img width="1204" alt="2021-10-01 20 33 42" src="https://user-images.githubusercontent.com/82787843/135613393-dd124dc0-0f81-4839-85d2-10ba2e9d2281.png">
+<img width="1201"  src="https://user-images.githubusercontent.com/82787843/212541658-9f73894d-ab76-4b7c-a518-1772e712e232.png">
+
 
 ## Requirements
 * Docker version 20.10.x, or later
@@ -26,6 +27,22 @@ The functions of this microservice are in the red frame below.
 docker-compose up -d
 ```
 It takes more than 20 minutes to pull the Docker image for the first time.
+If vald does not start due to an error, commenting out the following part in docker-compose.yml may work.
+```yml
+  vald:
+    image: vdaas/vald-agent-ngt:v1.6.3
+    #user: 1000:1000
+    volumes:
+      - ./vald-config:/etc/server
+      #- /etc/passwd:/etc/passwd:ro
+      #- /etc/group:/etc/group:ro
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.10
+    ports:
+      - 8081:8081
+```
+
 ## Usage
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
@@ -41,14 +58,77 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "analyzedSentenceObjects": [
         {
             "nodeMap": {
-                "21687cd8-437b-48c6-bd21-210f67cc5e07-3": {
-                    "nodeId": "21687cd8-437b-48c6-bd21-210f67cc5e07-3",
-                    "propositionId": "21687cd8-437b-48c6-bd21-210f67cc5e07",
-                    "currentId": 3,
+                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-0": {
+                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-0",
+                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
+                    "currentId": 0,
+                    "parentId": 1,
+                    "isMainSection": false,
+                    "surface": "自然界の",
+                    "normalizedName": "自然",
+                    "dependType": "D",
+                    "caseType": "ノ格",
+                    "namedEntity": "",
+                    "rangeExpressions": {
+                        "": {}
+                    },
+                    "categories": {
+                        "": "",
+                        "界": "抽象物"
+                    },
+                    "domains": {
+                        "": ""
+                    },
+                    "isDenialWord": false,
+                    "isConditionalConnection": false,
+                    "normalizedNameYomi": "しぜんかい?境",
+                    "surfaceYomi": "しぜんかいの",
+                    "modalityType": "-",
+                    "logicType": "-",
+                    "nodeType": 1,
+                    "lang": "ja_JP",
+                    "extentText": "{}"
+                },
+                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-1": {
+                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-1",
+                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
+                    "currentId": 1,
+                    "parentId": 6,
+                    "isMainSection": false,
+                    "surface": "物理法則は",
+                    "normalizedName": "物理",
+                    "dependType": "D",
+                    "caseType": "未格",
+                    "namedEntity": "",
+                    "rangeExpressions": {
+                        "": {}
+                    },
+                    "categories": {
+                        "物理": "抽象物",
+                        "法則": "抽象物"
+                    },
+                    "domains": {
+                        "物理": "教育・学習;科学・技術",
+                        "": ""
+                    },
+                    "isDenialWord": false,
+                    "isConditionalConnection": false,
+                    "normalizedNameYomi": "ぶつりほうそく",
+                    "surfaceYomi": "ぶつりほうそくは",
+                    "modalityType": "-",
+                    "logicType": "-",
+                    "nodeType": 1,
+                    "lang": "ja_JP",
+                    "extentText": "{}"
+                },
+                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6": {
+                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6",
+                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
+                    "currentId": 6,
                     "parentId": -1,
                     "isMainSection": true,
-                    "surface": "した。",
-                    "normalizedName": "する",
+                    "surface": "成立する。",
+                    "normalizedName": "成立",
                     "dependType": "D",
                     "caseType": "文末",
                     "namedEntity": "",
@@ -56,6 +136,36 @@ curl -X POST -H "Content-Type: application/json" -d '{
                         "": {}
                     },
                     "categories": {
+                        "成立": "抽象物"
+                    },
+                    "domains": {
+                        "": ""
+                    },
+                    "isDenialWord": false,
+                    "isConditionalConnection": false,
+                    "normalizedNameYomi": "せいりつ",
+                    "surfaceYomi": "せいりつする。",
+                    "modalityType": "-",
+                    "logicType": "-",
+                    "nodeType": 1,
+                    "lang": "ja_JP",
+                    "extentText": "{}"
+                },
+                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-4": {
+                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-4",
+                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
+                    "currentId": 4,
+                    "parentId": 5,
+                    "isMainSection": false,
+                    "surface": "どの",
+                    "normalizedName": "どの",
+                    "dependType": "D",
+                    "caseType": "連体",
+                    "namedEntity": "",
+                    "rangeExpressions": {
+                        "": {}
+                    },
+                    "categories": {
                         "": ""
                     },
                     "domains": {
@@ -63,85 +173,86 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     },
                     "isDenialWord": false,
                     "isConditionalConnection": false,
-                    "normalizedNameYomi": "する",
-                    "surfaceYomi": "した。",
+                    "normalizedNameYomi": "どの",
+                    "surfaceYomi": "どの",
                     "modalityType": "-",
                     "logicType": "-",
                     "nodeType": 1,
                     "lang": "ja_JP",
                     "extentText": "{}"
                 },
-                "21687cd8-437b-48c6-bd21-210f67cc5e07-2": {
-                    "nodeId": "21687cd8-437b-48c6-bd21-210f67cc5e07-2",
-                    "propositionId": "21687cd8-437b-48c6-bd21-210f67cc5e07",
+                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-2": {
+                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-2",
+                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
                     "currentId": 2,
                     "parentId": 3,
                     "isMainSection": false,
-                    "surface": "発案を",
-                    "normalizedName": "発案",
-                    "dependType": "D",
-                    "caseType": "ヲ格",
-                    "namedEntity": "",
-                    "rangeExpressions": {
-                        "": {}
-                    },
-                    "categories": {
-                        "発案": "抽象物"
-                    },
-                    "domains": {
-                        "": ""
-                    },
-                    "isDenialWord": false,
-                    "isConditionalConnection": false,
-                    "normalizedNameYomi": "はつあん",
-                    "surfaceYomi": "はつあんを",
-                    "modalityType": "-",
-                    "logicType": "-",
-                    "nodeType": 1,
-                    "lang": "ja_JP",
-                    "extentText": "{}"
-                },
-                "21687cd8-437b-48c6-bd21-210f67cc5e07-1": {
-                    "nodeId": "21687cd8-437b-48c6-bd21-210f67cc5e07-1",
-                    "propositionId": "21687cd8-437b-48c6-bd21-210f67cc5e07",
-                    "currentId": 1,
-                    "parentId": 2,
-                    "isMainSection": false,
-                    "surface": "秀逸な",
-                    "normalizedName": "秀逸だ",
-                    "dependType": "D",
-                    "caseType": "連格",
-                    "namedEntity": "",
-                    "rangeExpressions": {
-                        "": {}
-                    },
-                    "categories": {
-                        "": ""
-                    },
-                    "domains": {
-                        "": ""
-                    },
-                    "isDenialWord": false,
-                    "isConditionalConnection": false,
-                    "normalizedNameYomi": "しゅういつだ",
-                    "surfaceYomi": "しゅういつな",
-                    "modalityType": "-",
-                    "logicType": "-",
-                    "nodeType": 1,
-                    "lang": "ja_JP",
-                    "extentText": "{}"
-                },
-                "21687cd8-437b-48c6-bd21-210f67cc5e07-0": {
-                    "nodeId": "21687cd8-437b-48c6-bd21-210f67cc5e07-0",
-                    "propositionId": "21687cd8-437b-48c6-bd21-210f67cc5e07",
-                    "currentId": 0,
-                    "parentId": 3,
-                    "isMainSection": false,
-                    "surface": "太郎は",
-                    "normalizedName": "太郎",
+                    "surface": "例外",
+                    "normalizedName": "例外",
                     "dependType": "D",
                     "caseType": "未格",
-                    "namedEntity": "PERSON:太郎",
+                    "namedEntity": "",
+                    "rangeExpressions": {
+                        "": {}
+                    },
+                    "categories": {
+                        "例外": "抽象物"
+                    },
+                    "domains": {
+                        "": ""
+                    },
+                    "isDenialWord": false,
+                    "isConditionalConnection": false,
+                    "normalizedNameYomi": "れいがい",
+                    "surfaceYomi": "れいがい",
+                    "modalityType": "-",
+                    "logicType": "-",
+                    "nodeType": 1,
+                    "lang": "ja_JP",
+                    "extentText": "{}"
+                },
+                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-5": {
+                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-5",
+                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
+                    "currentId": 5,
+                    "parentId": 6,
+                    "isMainSection": false,
+                    "surface": "慣性系でも",
+                    "normalizedName": "慣性",
+                    "dependType": "D",
+                    "caseType": "デ格",
+                    "namedEntity": "",
+                    "rangeExpressions": {
+                        "": {}
+                    },
+                    "categories": {
+                        "": "",
+                        "系": "抽象物"
+                    },
+                    "domains": {
+                        "": ""
+                    },
+                    "isDenialWord": false,
+                    "isConditionalConnection": false,
+                    "normalizedNameYomi": "かんせいけい",
+                    "surfaceYomi": "かんせいけいでも",
+                    "modalityType": "-",
+                    "logicType": "AND",
+                    "nodeType": 1,
+                    "lang": "ja_JP",
+                    "extentText": "{}"
+                },
+                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-3": {
+                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-3",
+                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
+                    "currentId": 3,
+                    "parentId": 6,
+                    "isMainSection": false,
+                    "surface": "なく",
+                    "normalizedName": "無い",
+                    "dependType": "D",
+                    "caseType": "連用",
+                    "namedEntity": "",
                     "rangeExpressions": {
                         "": {}
                     },
@@ -153,8 +264,8 @@ curl -X POST -H "Content-Type: application/json" -d '{
                     },
                     "isDenialWord": false,
                     "isConditionalConnection": false,
-                    "normalizedNameYomi": "たろう",
-                    "surfaceYomi": "たろうは",
+                    "normalizedNameYomi": "ない",
+                    "surfaceYomi": "なく",
                     "modalityType": "-",
                     "logicType": "-",
                     "nodeType": 1,
@@ -164,31 +275,57 @@ curl -X POST -H "Content-Type: application/json" -d '{
             },
             "edgeList": [
                 {
-                    "sourceId": "21687cd8-437b-48c6-bd21-210f67cc5e07-2",
-                    "destinationId": "21687cd8-437b-48c6-bd21-210f67cc5e07-3",
-                    "caseStr": "ヲ格",
+                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-5",
+                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6",
+                    "caseStr": "デ格",
+                    "dependType": "D",
+                    "logicType": "AND",
+                    "lang": "ja_JP"
+                },
+                {
+                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-4",
+                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-5",
+                    "caseStr": "連体",
                     "dependType": "D",
                     "logicType": "-",
                     "lang": "ja_JP"
                 },
                 {
-                    "sourceId": "21687cd8-437b-48c6-bd21-210f67cc5e07-1",
-                    "destinationId": "21687cd8-437b-48c6-bd21-210f67cc5e07-2",
-                    "caseStr": "連格",
+                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-3",
+                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6",
+                    "caseStr": "連用",
                     "dependType": "D",
                     "logicType": "-",
                     "lang": "ja_JP"
                 },
                 {
-                    "sourceId": "21687cd8-437b-48c6-bd21-210f67cc5e07-0",
-                    "destinationId": "21687cd8-437b-48c6-bd21-210f67cc5e07-3",
+                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-2",
+                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-3",
                     "caseStr": "未格",
+                    "dependType": "D",
+                    "logicType": "-",
+                    "lang": "ja_JP"
+                },
+                {
+                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-1",
+                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6",
+                    "caseStr": "未格",
+                    "dependType": "D",
+                    "logicType": "-",
+                    "lang": "ja_JP"
+                },
+                {
+                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-0",
+                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-1",
+                    "caseStr": "ノ格",
                     "dependType": "D",
                     "logicType": "-",
                     "lang": "ja_JP"
                 }
             ],
             "sentenceType": 1,
+            "sentenceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f",
+            "lang": "ja_JP",
             "deductionResultMap": {
                 "0": {
                     "status": false,
