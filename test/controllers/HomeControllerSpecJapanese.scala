@@ -329,6 +329,96 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
 
     }
   }
+
+  "The specification4-japanese" should {
+    "returns an appropriate response" in {
+      val sentenceA = "案ずるより産むが易し。"
+      val paraphraseA = "案ずるより産むが易し。"
+      val propositionId1 = UUID.random.toString
+      val sentenceId1 = UUID.random.toString
+
+      val knowledge1 = Knowledge(sentenceA, "ja_JP", "{}", false)
+      val paraphrase1 = Knowledge(paraphraseA,"ja_JP", "{}", false)
+      registSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1))
+
+      val json1 =
+        """{
+          |    "index": 0,
+          |    "function":{
+          |        "host": "%s",
+          |        "port": "9101"
+          |    }
+          |}""".stripMargin.format(conf.getString("TOPOSOID_DEDUCTION_UNIT1_HOST"))
+
+      val json2 =
+        """{
+          |    "index": 1,
+          |    "function":{
+          |        "host": "%s",
+          |        "port": "9102"
+          |    }
+          |}""".stripMargin.format(conf.getString("TOPOSOID_DEDUCTION_UNIT2_HOST"))
+
+      val json3 =
+        """{
+          |    "index": 2,
+          |    "function":{
+          |        "host": "%s",
+          |        "port": "9103"
+          |    }
+          |}""".stripMargin.format(conf.getString("TOPOSOID_DEDUCTION_UNIT3_HOST"))
+
+      val fr1 = FakeRequest(POST, "/changeEndPoints")
+        .withHeaders("Content-type" -> "application/json")
+        .withJsonBody(Json.parse(json1))
+
+      val result1 = call(controller.changeEndPoints(), fr1)
+      status(result1) mustBe OK
+      contentType(result1) mustBe Some("application/json")
+      assert(contentAsJson(result1).toString().equals("""{"status":"OK"}"""))
+
+      val fr2 = FakeRequest(POST, "/changeEndPoints")
+        .withHeaders("Content-type" -> "application/json")
+        .withJsonBody(Json.parse(json2))
+
+      val result2 = call(controller.changeEndPoints(), fr2)
+      status(result2) mustBe OK
+      contentType(result2) mustBe Some("application/json")
+      assert(contentAsJson(result2).toString().equals("""{"status":"OK"}"""))
+
+      val fr3 = FakeRequest(POST, "/changeEndPoints")
+        .withHeaders("Content-type" -> "application/json")
+        .withJsonBody(Json.parse(json3))
+
+      val result3 = call(controller.changeEndPoints(), fr3)
+      status(result3) mustBe OK
+      contentType(result3) mustBe Some("application/json")
+      assert(contentAsJson(result3).toString().equals("""{"status":"OK"}"""))
+
+      val propositionIdForInference = UUID.random.toString
+      val premiseKnowledge = List.empty[KnowledgeForParser]
+      val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, UUID.random.toString, paraphrase1))
+      val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
+
+      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_JP_WEB_HOST"), "9001", "analyze")
+
+      val fr4 = FakeRequest(POST, "/executeDeduction")
+        .withHeaders("Content-type" -> "application/json")
+        .withJsonBody(Json.parse(json4))
+
+      val result4 = call(controller.executeDeduction(), fr4)
+      status(result4) mustBe OK
+      contentType(result4) mustBe Some("application/json")
+
+      val jsonResult = contentAsJson(result4).toString()
+      val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.status).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.deductionUnit.equals("exact-match")).size == 1)
+
+    }
+  }
+
+
   "The deduction that noo4j has no data" should {
     "returns an appropriate response" in {
       val paraphraseA = "太郎は秀逸な提案をした。"
