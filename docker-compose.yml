@@ -9,7 +9,7 @@ networks:
 
 services:
   toposoid-deduction-admin-web:
-    image: toposoid/toposoid-deduction-admin-web:0.4-SNAPSHOT
+    image: toposoid/toposoid-deduction-admin-web:0.4
     tty: true
     environment:
       - GRAPHDB_HOST=172.30.0.2
@@ -27,7 +27,7 @@ services:
     depends_on:
       - toposoid-deduction-unit-exact-match-web
   toposoid-deduction-unit-exact-match-web:
-    image: toposoid/toposoid-deduction-unit-exact-match-web:0.4-SNAPSHOT
+    image: toposoid/toposoid-deduction-unit-exact-match-web:0.4
     tty: true
     environment:
       - GRAPHDB_HOST=172.30.0.2
@@ -42,7 +42,7 @@ services:
     depends_on:
       - scala-data-accessor-neo4j-web
   toposoid-deduction-unit-synonym-match-web:
-    image: toposoid/toposoid-deduction-unit-synonym-match-web:0.4-SNAPSHOT
+    image: toposoid/toposoid-deduction-unit-synonym-match-web:0.4
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.11
       - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
@@ -55,7 +55,7 @@ services:
     depends_on:
       - scala-data-accessor-neo4j-web
   toposoid-deduction-unit-sentence-vector-match-web:
-    image: toposoid/toposoid-deduction-unit-sentence-vector-match-web:0.4-SNAPSHOT
+    image: toposoid/toposoid-deduction-unit-sentence-vector-match-web:0.4
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.12
       - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
@@ -73,7 +73,7 @@ services:
       - scala-data-accessor-neo4j-web
       - data-accessor-vald-web
   toposoid-common-nlp-japanese-web:
-    image: toposoid/toposoid-common-nlp-japanese-web:0.4-SNAPSHOT-workflow
+    image: toposoid/toposoid-common-nlp-japanese-web:0.4
     tty: true
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.5
@@ -89,7 +89,7 @@ services:
     ports:
       - 9006:9006
   toposoid-common-nlp-english-web:
-    image: toposoid/toposoid-common-nlp-english-web:0.4-SNAPSHOT
+    image: toposoid/toposoid-common-nlp-english-web:0.4
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.7
       - SYNONYM_NOUN_SIMILARITY_THRESHHOLD_EN=0.52
@@ -103,7 +103,7 @@ services:
     ports:
       - 9008:9008
   scala-data-accessor-neo4j-web:
-    image: toposoid/scala-data-accessor-neo4j-web:0.4-SNAPSHOT
+    image: toposoid/scala-data-accessor-neo4j-web:0.4
     environment:
       - GRAPHDB_HOST=172.30.0.2
       - PRIVATE_IP_ADDRESS=172.30.0.3
@@ -128,7 +128,7 @@ services:
       app_net:
         ipv4_address: 172.30.0.2
   data-accessor-vald-web:
-    image: toposoid/data-accessor-vald-web:0.4-SNAPSHOT
+    image: toposoid/data-accessor-vald-web:0.4
     environment:
       - TOPOSOID_VALD_HOST=172.30.0.14
       - TOPOSOID_VALD_PORT=8081
