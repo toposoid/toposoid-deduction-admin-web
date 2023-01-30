@@ -29,6 +29,7 @@ import akka.stream.scaladsl._
 import akka.stream.{ActorMaterializer, ClosedShape}
 import akka.stream.scaladsl.{Flow, GraphDSL, Sink, Source}
 import com.ideal.linked.common.DeploymentConverter.conf
+import com.ideal.linked.toposoid.common.CLAIM
 import com.ideal.linked.toposoid.deduction.common.FacadeForAccessNeo4J.getCypherQueryResult
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
 import com.typesafe.scalalogging.LazyLogging
@@ -146,15 +147,18 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
 
     val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson.toString).as[AnalyzedSentenceObjects]
     //既に真になっているものは解析対象外
-    val nonTargets:List[AnalyzedSentenceObject] = analyzedSentenceObjects.analyzedSentenceObjects.filter((x:AnalyzedSentenceObject) => x.deductionResultMap.get(x.sentenceType.toString).get.status)
+    //val nonTargets:List[AnalyzedSentenceObject] =
+
+    val notFinished = analyzedSentenceObjects.analyzedSentenceObjects.filterNot((x:AnalyzedSentenceObject) => x.deductionResultMap.get(CLAIM.index.toString).get.status).size != 0
 
     //何も処理をしなかったようにまずは、inputのjsonをセット
     var queryResultJson:String = targetJson
 
     //処理対象が存在する場合のみAPIに問い合わせる
-    val targets:List[AnalyzedSentenceObject] = analyzedSentenceObjects.analyzedSentenceObjects.filterNot((x:AnalyzedSentenceObject) => x.deductionResultMap.get(x.sentenceType.toString).get.status)
+    //val targets:List[AnalyzedSentenceObject] = analyzedSentenceObjects.analyzedSentenceObjects.filterNot((x:AnalyzedSentenceObject) => x.deductionResultMap.get(x.sentenceType.toString).get.status)
 
-    if(targets.size != 0) {
+    if(notFinished) {
+      val targets:List[AnalyzedSentenceObject] = analyzedSentenceObjects.analyzedSentenceObjects
       val entity = HttpEntity(ContentTypes.`application/json`, Json.toJson(AnalyzedSentenceObjects(targets)).toString())
       val req = HttpRequest(uri = "http://" + endpoint.host + ":" + endpoint.port + "/execute", method = HttpMethods.POST, entity = entity)
       val result = Http().singleRequest(req)
@@ -175,8 +179,8 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       }
 
       val resultAnalyzedSentenceObjects = Json.parse(queryResultJson).as[AnalyzedSentenceObjects]
-      val mergeList:List[AnalyzedSentenceObject] = resultAnalyzedSentenceObjects.analyzedSentenceObjects ++ nonTargets
-      queryResultJson = Json.toJson(AnalyzedSentenceObjects(mergeList)).toString()
+      //val mergeList:List[AnalyzedSentenceObject] = resultAnalyzedSentenceObjects.analyzedSentenceObjects ++ nonTargets
+      queryResultJson = Json.toJson(AnalyzedSentenceObjects(resultAnalyzedSentenceObjects.analyzedSentenceObjects)).toString()
     }
     targetJson = queryResultJson
     queryResultJson
