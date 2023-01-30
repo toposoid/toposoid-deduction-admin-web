@@ -146,16 +146,10 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     implicit val jsonStreamingSupport: JsonEntityStreamingSupport = EntityStreamingSupport.json()
 
     val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson.toString).as[AnalyzedSentenceObjects]
-    //既に真になっているものは解析対象外
-    //val nonTargets:List[AnalyzedSentenceObject] =
+    val checkTargets = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.sentenceType == CLAIM.index)
+    val notFinished = checkTargets.filter(x => x.deductionResultMap.get(CLAIM.index.toString).get.status).size < checkTargets.size
 
-    val notFinished = analyzedSentenceObjects.analyzedSentenceObjects.filterNot((x:AnalyzedSentenceObject) => x.sentenceType == CLAIM.index && x.deductionResultMap.get(CLAIM.index.toString).get.status).size != 0
-
-    //何も処理をしなかったようにまずは、inputのjsonをセット
     var queryResultJson:String = targetJson
-
-    //処理対象が存在する場合のみAPIに問い合わせる
-    //val targets:List[AnalyzedSentenceObject] = analyzedSentenceObjects.analyzedSentenceObjects.filterNot((x:AnalyzedSentenceObject) => x.deductionResultMap.get(x.sentenceType.toString).get.status)
 
     if(notFinished) {
       val targets:List[AnalyzedSentenceObject] = analyzedSentenceObjects.analyzedSentenceObjects
