@@ -149,7 +149,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     //既に真になっているものは解析対象外
     //val nonTargets:List[AnalyzedSentenceObject] =
 
-    val notFinished = analyzedSentenceObjects.analyzedSentenceObjects.filterNot((x:AnalyzedSentenceObject) => x.deductionResultMap.get(CLAIM.index.toString).get.status).size != 0
+    val notFinished = analyzedSentenceObjects.analyzedSentenceObjects.filterNot((x:AnalyzedSentenceObject) => x.sentenceType == CLAIM.index && x.deductionResultMap.get(CLAIM.index.toString).get.status).size != 0
 
     //何も処理をしなかったようにまずは、inputのjsonをセット
     var queryResultJson:String = targetJson
