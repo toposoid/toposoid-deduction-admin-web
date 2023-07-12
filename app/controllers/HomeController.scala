@@ -100,8 +100,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
         implicit val materializer = ActorMaterializer()
         implicit val executionContext = system.dispatcher
 
-        //val in = Source(endPoints.to[scala.collection.immutable.Seq])
-        val in = Source(endPoints.toSeq)
+        val in = Source(endPoints.to[scala.collection.immutable.Seq])
         val out = Sink.seq[String]
         val g = RunnableGraph.fromGraph(GraphDSL.create(out) { implicit builder => o =>
           import GraphDSL.Implicits._
