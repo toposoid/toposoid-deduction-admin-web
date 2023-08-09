@@ -147,7 +147,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     implicit val jsonStreamingSupport: JsonEntityStreamingSupport = EntityStreamingSupport.json()
 
     val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson.toString).as[AnalyzedSentenceObjects]
-    val checkTargets = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.sentenceType == CLAIM.index)
+    val checkTargets = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeFeatureNode.sentenceType == CLAIM.index)
     val notFinished = checkTargets.filter(x => x.deductionResultMap.get(CLAIM.index.toString).get.status).size < checkTargets.size
 
     var queryResultJson:String = targetJson
