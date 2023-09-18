@@ -325,7 +325,7 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
       val jsonResult = contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.deductionUnit.equals("sentence-vector-match")).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.deductionUnit.equals("sentence-feature-match")).size == 1)
 
     }
   }
