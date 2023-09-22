@@ -48,6 +48,7 @@ class HomeControllerSpecJapanese extends PlaySpec with BeforeAndAfter with Befor
 
   override def beforeAll(): Unit = {
     Neo4JAccessor.delete()
+    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_VECTORDB_ACCESSOR_PORT"), "createSchema")
   }
 
   override def afterAll(): Unit = {
