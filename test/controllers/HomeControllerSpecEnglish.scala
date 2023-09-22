@@ -41,7 +41,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
 
   override def beforeAll(): Unit = {
     Neo4JAccessor.delete()
-    //Sentence2Neo4jTransformer.createGraphAuto(List(UUID.random.toString), List(Knowledge("Life is so comfortable.","en_US", "{}", false)))
+    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_VECTORDB_ACCESSOR_PORT"), "createSchema")
   }
 
   override def afterAll(): Unit = {

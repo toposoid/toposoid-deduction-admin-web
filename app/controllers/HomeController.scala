@@ -123,7 +123,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
           Thread.sleep(20)
         }
       }
-      print("check")
+      //print("check")
       Ok(targetJson).as(JSON)
 
     }catch {
