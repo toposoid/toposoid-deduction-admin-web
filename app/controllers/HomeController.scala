@@ -29,7 +29,7 @@ import akka.stream.scaladsl._
 import akka.stream.{ActorMaterializer, ClosedShape}
 import akka.stream.scaladsl.{Flow, GraphDSL, Sink, Source}
 import com.ideal.linked.common.DeploymentConverter.conf
-import com.ideal.linked.toposoid.common.CLAIM
+import com.ideal.linked.toposoid.common.{CLAIM, PREMISE}
 import com.ideal.linked.toposoid.deduction.common.FacadeForAccessNeo4J.getCypherQueryResult
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
 import com.typesafe.scalalogging.LazyLogging
@@ -147,13 +147,20 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     implicit val jsonStreamingSupport: JsonEntityStreamingSupport = EntityStreamingSupport.json()
 
     val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson.toString).as[AnalyzedSentenceObjects]
-    val checkTargets = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeFeatureNode.sentenceType == CLAIM.index)
-    val notFinished = checkTargets.filter(x => x.deductionResultMap.get(CLAIM.index.toString).get.status).size < checkTargets.size
-
+    val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == PREMISE.index).size > 0
+    //If the proposition has premise, the truth of the claim is determined along with the truth of havePremiseInGivenProposition.
+    val checkTargets = hasPremise match  {
+      case true => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index && x.deductionResult.havePremiseInGivenProposition)
+      case _ => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index)
+    }
+    //val checkTargets = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index)
+    //val notFinished = checkTargets.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index && x.deductionResult.status).size < checkTargets.size
+    val notFinished = checkTargets.filterNot(x => x.deductionResult.status)
     var queryResultJson:String = targetJson
 
-    if(notFinished) {
-      val targets:List[AnalyzedSentenceObject] = analyzedSentenceObjects.analyzedSentenceObjects
+    //if(notFinished) {
+    if(notFinished.size > 0) {
+      val targets:List[AnalyzedSentenceObject] = notFinished
       val entity = HttpEntity(ContentTypes.`application/json`, Json.toJson(AnalyzedSentenceObjects(targets)).toString())
       val req = HttpRequest(uri = "http://" + endpoint.host + ":" + endpoint.port + "/execute", method = HttpMethods.POST, entity = entity)
       val result = Http().singleRequest(req)

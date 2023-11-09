@@ -19,7 +19,7 @@ package controllers
 import akka.util.Timeout
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.data.accessor.neo4j.Neo4JAccessor
-import com.ideal.linked.toposoid.common.ToposoidUtils
+import com.ideal.linked.toposoid.common.{CLAIM, ToposoidUtils}
 import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, PropositionRelation}
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
 import com.ideal.linked.toposoid.protocol.model.parser.{InputSentence, InputSentenceForParser, KnowledgeForParser, KnowledgeSentenceSetForParser}
@@ -41,7 +41,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
 
   override def beforeAll(): Unit = {
     Neo4JAccessor.delete()
-    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_VECTORDB_ACCESSOR_PORT"), "createSchema")
+    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_PORT"), "createSchema")
   }
 
   override def afterAll(): Unit = {
@@ -129,7 +129,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
 
       //val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("Living is so comfortable.","en_US", "{}", false)))).toString()
-      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_EN_WEB_HOST"), "9007", "analyze")
+      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze")
 
       val fr4 = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json")
@@ -141,8 +141,8 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
 
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.deductionUnit.equals("exact-match")).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.deductionUnit.equals("exact-match")).size == 1)
     }
   }
 
@@ -214,7 +214,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
 
       //val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("Living is so comfortable.","en_US", "{}", false)))).toString()
-      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_EN_WEB_HOST"), "9007", "analyze")
+      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze")
 
       val fr4 = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json")
@@ -226,8 +226,8 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
 
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.deductionUnit.equals("synonym-match")).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.deductionUnit.equals("synonym-match")).size == 1)
 
     }
   }
@@ -301,7 +301,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
 
       //val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("Living is so comfortable.","en_US", "{}", false)))).toString()
-      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_EN_WEB_HOST"), "9007", "analyze")
+      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze")
 
       val fr4 = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json")
@@ -313,8 +313,8 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
 
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.deductionUnit.equals("sentence-feature-match")).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.deductionUnit.equals("sentence-feature-match")).size == 1)
     }
   }
 
@@ -386,7 +386,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
 
       //val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("Living is so comfortable.","en_US", "{}", false)))).toString()
-      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("SENTENCE_PARSER_EN_WEB_HOST"), "9007", "analyze")
+      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze")
 
       val fr4 = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json")
@@ -398,8 +398,8 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
 
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(_.deductionResultMap.get("1").get.deductionUnit.equals("exact-match")).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.deductionUnit.equals("exact-match")).size == 1)
 
     }
   }
