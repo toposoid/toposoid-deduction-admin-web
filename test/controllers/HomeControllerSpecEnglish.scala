@@ -142,7 +142,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.deductionUnit.equals("exact-match")).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
     }
   }
 
@@ -227,8 +227,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.deductionUnit.equals("synonym-match")).size == 1)
-
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
     }
   }
 
@@ -314,7 +313,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.deductionUnit.equals("sentence-feature-match")).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("sentence-feature-match")).size == 1).size == 1)
     }
   }
 
@@ -399,7 +398,7 @@ class HomeControllerSpecEnglish extends PlaySpec with BeforeAndAfter with Before
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.deductionUnit.equals("exact-match")).size == 1)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
 
     }
   }
