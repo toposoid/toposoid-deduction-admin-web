@@ -5,4 +5,5 @@
 
 # An example controller showing a sample home page
 POST    /changeEndPoints            controllers.HomeController.changeEndPoints()
+POST    /getEndPoints               controllers.HomeController.getEndPoints()
 POST    /executeDeduction           controllers.HomeController.executeDeduction()

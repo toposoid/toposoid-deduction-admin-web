@@ -55,12 +55,17 @@ object ReqSelector {
 @Singleton
 class HomeController @Inject()(val controllerComponents: ControllerComponents) extends BaseController with LazyLogging{
 
-  val defaultEndPoints:Seq[Endpoint] = Seq(
-    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT1_HOST"), port="9101"),
-    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT2_HOST"), port="9102"),
-    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT3_HOST"), port="9103"))
-  var endPoints:Seq[Endpoint] = defaultEndPoints
-  var targetJson:String = ""
+  final val NO_HOST = "-"
+  final val NO_PORT = "-"
+
+  private val defaultEndPoints:Seq[Endpoint] = Seq(
+    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT1_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT1_PORT")),
+    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT2_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT2_PORT")),
+    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT3_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT3_PORT")),
+    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT4_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT4_PORT")),
+    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT5_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT5_PORT")))
+  private var endPoints:Seq[Endpoint] = defaultEndPoints
+  //private var targetJson:String = ""
 
   /**
    * This function receives the URL information of the microservice as JSON and
@@ -81,6 +86,18 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     }
   }
 
+  def getEndPoints() = Action(parse.json) { request =>
+    try {
+      Ok(Json.toJson(endPoints)).as(JSON)
+    } catch {
+      case e: Exception => {
+        logger.error(e.toString, e)
+        BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
+      }
+    }
+  }
+
+
   /**
    * This function receives the predicate argument structure analysis result of a Japanese sentence as JSON,
    * delegates the processing to the registered microservices that perform deductive inference, and returns the result in JSON.
@@ -88,43 +105,11 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    */
   def executeDeduction()  = Action(parse.json) { request =>
     try {
-
       val json = request.body
-      val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(json.toString).as[AnalyzedSentenceObjects]
-      targetJson = json.toString()
-
       val jsonStr:String = getCypherQueryResult("MATCH (n) RETURN n limit 1;", "")
-      if(!jsonStr.equals("""{"records":[]}""")){
-
-        implicit val system = ActorSystem("my-system")
-        implicit val materializer = ActorMaterializer()
-        implicit val executionContext = system.dispatcher
-
-        //val in = Source(endPoints.to[scala.collection.immutable.Seq])
-        val in = Source(endPoints.toSeq)
-        val out = Sink.seq[String]
-        val g = RunnableGraph.fromGraph(GraphDSL.create(out) { implicit builder => o =>
-          import GraphDSL.Implicits._
-          val flow = builder.add(Flow[Endpoint].map(deduce(_)))
-          in ~> flow ~>  o
-          ClosedShape
-        })
-        val hoge = g.run()
-        var resultJson = ""
-        hoge.onComplete {
-          case Success(js) =>
-            println(s"Success: $js")
-            println("---------------------------------------------------")
-            resultJson = js.last
-          case Failure(e) =>
-            println(s"Failure: $e")
-        }
-        while(!hoge.isCompleted){
-          Thread.sleep(20)
-        }
-      }
-      //print("check")
-      Ok(targetJson).as(JSON)
+      if(jsonStr.equals("""{"records":[]}""")) Ok(json.toString()).as(JSON)
+      val result = deduce(0, json.toString(), json.toString())
+      Ok(result._3).as(JSON)
 
     }catch {
       case e: Exception => {
@@ -134,31 +119,37 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     }
   }
 
+  private def deduce(index:Int, targetJson:String, resultJson:String): (Int, String, String) ={
+    val asosJson = execute(endPoints(index), targetJson, resultJson)
+    if(index == endPoints.size -1){
+      (index, asosJson._1, asosJson._2)
+    }else{
+      deduce(index + 1, asosJson._1, asosJson._2)
+    }
+  }
+
   /**
    *　This function delegates processing to a registered group of microservices that perform deductive inference.
    * @param endpoint
    * @return
    */
-  private def deduce(endpoint:Endpoint): String ={
 
+  private def execute(endpoint:Endpoint, targetJson:String, resultJson:String): (String, String) ={
+
+    if(endpoint.host.equals(NO_HOST) || endpoint.port.equals(NO_PORT)) return (targetJson, resultJson)
     implicit val system = ActorSystem()
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
-    implicit val jsonStreamingSupport: JsonEntityStreamingSupport = EntityStreamingSupport.json()
 
-    val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson.toString).as[AnalyzedSentenceObjects]
+    val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson).as[AnalyzedSentenceObjects]
     val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == PREMISE.index).size > 0
     //If the proposition has premise, the truth of the claim is determined along with the truth of havePremiseInGivenProposition.
     val checkTargets = hasPremise match  {
       case true => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index && x.deductionResult.havePremiseInGivenProposition)
       case _ => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index)
     }
-    //val checkTargets = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index)
-    //val notFinished = checkTargets.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index && x.deductionResult.status).size < checkTargets.size
     val notFinished = checkTargets.filterNot(x => x.deductionResult.status)
-    var queryResultJson:String = targetJson
 
-    //if(notFinished) {
     if(notFinished.size > 0) {
       val targets:List[AnalyzedSentenceObject] = notFinished
       val entity = HttpEntity(ContentTypes.`application/json`, Json.toJson(AnalyzedSentenceObjects(targets)).toString())
@@ -171,22 +162,35 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
         }
       result.onComplete {
         case Success(js) =>
-          println(s"Success: $js")
-          queryResultJson = s"$js"
+          logger.debug(js.toString())
         case Failure(e) =>
-          println(s"Failure: $e")
+          logger.error(e.toString, e)
       }
       while(!result.isCompleted){
         Thread.sleep(20)
       }
-
-      val resultAnalyzedSentenceObjects = Json.parse(queryResultJson).as[AnalyzedSentenceObjects]
-      //val mergeList:List[AnalyzedSentenceObject] = resultAnalyzedSentenceObjects.analyzedSentenceObjects ++ nonTargets
-      queryResultJson = Json.toJson(AnalyzedSentenceObjects(resultAnalyzedSentenceObjects.analyzedSentenceObjects)).toString()
+      getResultJson(result.value.get.get.toString(), resultJson)
+    }else{
+      getResultJson(targetJson, resultJson)
     }
-    targetJson = queryResultJson
-    queryResultJson
-
   }
 
+  private def getResultJson(targetJson:String, resultJson:String):(String,String) ={
+    val targetAsos = Json.parse(targetJson).as[AnalyzedSentenceObjects].analyzedSentenceObjects
+    val resultAsos = Json.parse(resultJson).as[AnalyzedSentenceObjects].analyzedSentenceObjects
+
+    val asos = resultAsos.foldLeft(List.empty[AnalyzedSentenceObject]){
+      (acc, x) => {
+        val selfAsos = targetAsos.filter(_.knowledgeBaseSemiGlobalNode.sentenceId.equals(x.knowledgeBaseSemiGlobalNode.sentenceId))
+        val aso = selfAsos.size match {
+          case 0 => x
+          case _ => AnalyzedSentenceObject(x.nodeMap, x.edgeList, x.knowledgeBaseSemiGlobalNode, selfAsos.head.deductionResult)
+        }
+        acc :+ aso
+      }
+    }
+    val updateResultJson = Json.toJson(AnalyzedSentenceObjects(asos)).toString()
+    (targetJson, updateResultJson)
+  }
 }
+

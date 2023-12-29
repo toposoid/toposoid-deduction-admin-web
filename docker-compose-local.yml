@@ -8,36 +8,11 @@ networks:
         - subnet: 172.30.0.0/24
 
 services:
-  toposoid-deduction-admin-web:
-    image: toposoid/toposoid-deduction-admin-web:0.5-SNAPSHOT
-    tty: true
-    environment:
-      - GRAPHDB_HOST=172.30.0.2
-      - PRIVATE_IP_ADDRESS=localhost
-      - PLAY_HTTP_PORT=9003
-      - TOPOSOID_DEDUCTION_UNIT1_HOST=172.30.0.15
-      - TOPOSOID_DEDUCTION_UNIT2_HOST=172.30.0.16
-      - TOPOSOID_DEDUCTION_UNIT3_HOST=172.30.0.17
-      - TOPOSOID_DEDUCTION_UNIT4_HOST=172.30.0.18
-      - TOPOSOID_DEDUCTION_UNIT5_HOST=172.30.0.19
-      - TOPOSOID_DEDUCTION_UNIT1_PORT=9101
-      - TOPOSOID_DEDUCTION_UNIT2_PORT=9102
-      - TOPOSOID_DEDUCTION_UNIT3_PORT=9103
-      - TOPOSOID_DEDUCTION_UNIT4_PORT=9104
-      - TOPOSOID_DEDUCTION_UNIT5_PORT=9105
-      - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
-    networks:
-      app_net:
-        ipv4_address: 172.30.0.6
-    ports:
-      - 9003:9003
-    depends_on:
-      - toposoid-deduction-unit-exact-match-web
   toposoid-deduction-unit-exact-match-web:
     image: toposoid/toposoid-deduction-unit-exact-match-web:0.5-SNAPSHOT-workflow
     environment:
       - GRAPHDB_HOST=172.30.0.2
-      - PRIVATE_IP_ADDRESS=172.30.0.2
+      - PRIVATE_IP_ADDRESS=192.168.33.10
       - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=192.168.33.10
       - PLAY_HTTP_PORT=9101
     networks:
@@ -50,7 +25,7 @@ services:
   toposoid-deduction-unit-synonym-match-web:
     image: toposoid/toposoid-deduction-unit-synonym-match-web:0.5-SNAPSHOT-workflow
     environment:
-      - PRIVATE_IP_ADDRESS=172.30.0.16
+      - PRIVATE_IP_ADDRESS=192.168.33.10
       - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=192.168.33.10
       - PLAY_HTTP_PORT=9102
     networks:
@@ -63,7 +38,7 @@ services:
   toposoid-deduction-unit-sentence-vector-match-web:
     image: toposoid/toposoid-deduction-unit-sentence-vector-match-web:0.5-SNAPSHOT-workflow
     environment:
-      - PRIVATE_IP_ADDRESS=172.30.0.17
+      - PRIVATE_IP_ADDRESS=192.168.33.10
       - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=192.168.33.10
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=172.30.0.5
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
@@ -85,7 +60,7 @@ services:
   toposoid-deduction-unit-image-vector-match-web:
     image: toposoid/toposoid-deduction-unit-image-vector-match-web:0.5-SNAPSHOT-workflow
     environment:
-      - PRIVATE_IP_ADDRESS=172.30.0.18
+      - PRIVATE_IP_ADDRESS=192.168.33.10
       - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=192.168.33.10
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=172.30.0.5
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
@@ -115,7 +90,7 @@ services:
   toposoid-deduction-unit-whole-sentence-image-match-web:
     image: toposoid/toposoid-deduction-unit-whole-sentence-image-match-web:0.5-SNAPSHOT-workflow
     environment:
-      - PRIVATE_IP_ADDRESS=172.30.0.19
+      - PRIVATE_IP_ADDRESS=192.168.33.10
       - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=192.168.33.10
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=172.30.0.5
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
