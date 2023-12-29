@@ -92,9 +92,10 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
 
       val paraphraseA = "Living is so comfortable."
       val paraphraseB = "There are two pets."
-      val referenceParaB = Reference(url = "", surface = "ペットが", surfaceIndex = 0, isWholeSentence = false,
+      val referenceParaB = Reference(url = "", surface = "pets", surfaceIndex = 3, isWholeSentence = false,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
       val imageBoxInfoParaB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
+
       val knowledgeParaB = getKnowledge(lang, paraphraseB, referenceParaB, imageBoxInfoParaB)
       val paraphraseC = "We confirmed that the culprit was one of us."
       val paraphraseD = "A large vehicle is parked."
