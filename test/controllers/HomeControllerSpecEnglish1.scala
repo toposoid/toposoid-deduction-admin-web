@@ -20,11 +20,9 @@ import akka.util.Timeout
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.data.accessor.neo4j.Neo4JAccessor
 import com.ideal.linked.toposoid.common.{CLAIM, ToposoidUtils}
-import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, PropositionRelation, Reference}
+import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, Reference}
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
-import com.ideal.linked.toposoid.protocol.model.parser.{InputSentence, InputSentenceForParser, KnowledgeForParser, KnowledgeSentenceSetForParser}
-import com.ideal.linked.toposoid.sentence.transformer.neo4j.Sentence2Neo4jTransformer
-import com.ideal.linked.toposoid.vectorizer.FeatureVectorizer
+import com.ideal.linked.toposoid.protocol.model.parser.{InputSentenceForParser, KnowledgeForParser}
 import controllers.TestUtils.{addImageInfoToLocalNode, getImageInfo, getKnowledge, getUUID, registSingleClaim}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.play.PlaySpec
@@ -118,8 +116,16 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
 
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
+      val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index))
+
+      val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.coveredPropositionEdges.size } + acc }
+      val coveredKnowledgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.knowledgeBaseSideInfoList.size } + acc }
+      val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
+
+      assert(actualEdgeSize == coveredPropositionEdgeSize)
+      assert(actualEdgeSize <= coveredKnowledgeSize)
+      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
+      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
     }
   }
 
@@ -153,8 +159,15 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
 
       val jsonResult =contentAsJson(result4).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x =>  x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
+      val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index))
+      val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.coveredPropositionEdges.size } + acc }
+      val coveredKnowledgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.knowledgeBaseSideInfoList.size } + acc }
+      val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
+
+      assert(actualEdgeSize == coveredPropositionEdgeSize)
+      assert(actualEdgeSize <= coveredKnowledgeSize)
+      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
+      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("synonym-match")).size == 1).size == 1)
     }
   }
 
@@ -198,8 +211,16 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
 
       val jsonResult = contentAsJson(result).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.status).size == 1)
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index) && x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size == 1).size == 1)
+      val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(CLAIM.index))
+
+      val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.coveredPropositionEdges.size } + acc }
+      val coveredKnowledgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.knowledgeBaseSideInfoList.size } + acc }
+      val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
+
+      assert(actualEdgeSize == coveredPropositionEdgeSize)
+      assert(actualEdgeSize <= coveredKnowledgeSize)
+      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
+      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size == 1).size == 1)
 
     }
   }
