@@ -56,9 +56,6 @@ jobs:
             docker-compose -f docker-compose-workflow.yml rm -fsv toposoid-sentence-parser-japanese-web
             docker rmi --force toposoid/toposoid-sentence-parser-japanese-web:${{ env.PJ_VERSION }}-workflow
             docker rmi --force toposoid/toposoid-common-nlp-japanese-web:${{ env.PJ_VERSION }}-workflow
-            docker-compose -f docker-compose-workflow.yml rm -fsv weaviate
-            rm -Rf vald-config/backup/* > /dev/null 2>&1 && :
-            docker-compose -f docker-compose-workflow.yml up -d weaviate
             docker system prune -f
             docker volume prune -f
             docker-compose -f docker-compose-workflow.yml up -d corenlp
