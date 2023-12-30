@@ -121,7 +121,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val inputSentenceB = Json.toJson(InputSentenceForParser(premiseKnowledgeB, claimKnowledgeB)).toString()
 
       val inputSentenceC = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledgeC)).toString()
-      val jsonNoImageC = ToposoidUtils.callComponent(inputSentenceC, conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_PORT"), "analyze")
+      val jsonNoImageC = ToposoidUtils.callComponent(inputSentenceC, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze")
 
       val premiseKnowledgeD = List.empty[KnowledgeForParser]
       val claimKnowledgeD = List(KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaD))
