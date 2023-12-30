@@ -77,7 +77,7 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
 
       val propositionId1 = getUUID()
       val sentenceId1 = getUUID()
-      val knowledge1 = Knowledge(sentenceA, "ja_JP", "{}", false)
+      val knowledge1 = Knowledge(sentenceA, lang, "{}", false)
       registSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1))
 
       val propositionId2 = getUUID()
@@ -87,7 +87,7 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
 
       val propositionId3 = getUUID()
       val sentenceId3 = getUUID()
-      val knowledge3 = Knowledge(sentenceC, "ja_JP", "{}", false)
+      val knowledge3 = Knowledge(sentenceC, lang, "{}", false)
       registSingleClaim(KnowledgeForParser(propositionId3, sentenceId3, knowledge3))
 
       val propositionId4 = getUUID()
