@@ -53,9 +53,9 @@ services:
   toposoid-deduction-unit-exact-match-web:
     image: toposoid/toposoid-deduction-unit-exact-match-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.15
       - TOPOSOID_GRAPHDB_HOST=172.30.0.2
-      - TOPOSOID_GRAPHDB_WEB_HOST=192.168.33.10
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - PLAY_HTTP_PORT=9101
     networks:
       app_net:
@@ -67,8 +67,8 @@ services:
   toposoid-deduction-unit-synonym-match-web:
     image: toposoid/toposoid-deduction-unit-synonym-match-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
-      - TOPOSOID_GRAPHDB_WEB_HOST=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.16
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - PLAY_HTTP_PORT=9102
     networks:
       app_net:
@@ -80,8 +80,8 @@ services:
   toposoid-deduction-unit-sentence-vector-match-web:
     image: toposoid/toposoid-deduction-unit-sentence-vector-match-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
-      - TOPOSOID_GRAPHDB_WEB_HOST=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.17
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=172.30.0.5
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
       - TOPOSOID_COMMON_NLP_EN_WEB_HOST=172.30.0.7
@@ -102,8 +102,8 @@ services:
   toposoid-deduction-unit-image-vector-match-web:
     image: toposoid/toposoid-deduction-unit-image-vector-match-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
-      - TOPOSOID_GRAPHDB_WEB_HOST=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.18
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=172.30.0.5
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
       - TOPOSOID_COMMON_NLP_EN_WEB_HOST=172.30.0.7
@@ -132,8 +132,8 @@ services:
   toposoid-deduction-unit-whole-sentence-image-match-web:
     image: toposoid/toposoid-deduction-unit-whole-sentence-image-match-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
-      - TOPOSOID_GRAPHDB_WEB_HOST=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.19
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=172.30.0.5
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
       - TOPOSOID_COMMON_NLP_EN_WEB_HOST=172.30.0.7
@@ -156,7 +156,7 @@ services:
   scala-data-accessor-neo4j-web:
     image: toposoid/scala-data-accessor-neo4j-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.3
       - TOPOSOID_GRAPHDB_HOST=172.30.0.2
       - PLAY_HTTP_PORT=9005
     networks:
@@ -167,7 +167,7 @@ services:
   toposoid-sentence-parser-japanese-web:
     image: toposoid/toposoid-sentence-parser-japanese-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.4
       - PLAY_HTTP_PORT=9001
     networks:
       app_net:
@@ -177,7 +177,7 @@ services:
   toposoid-common-nlp-japanese-web:
     image: toposoid/toposoid-common-nlp-japanese-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.5
       - TOPOSOID_SYNONYM_NOUN_SIMILARITY_THRESHHOLD_JP=0.52
       - TOPOSOID_SYNONYM_VERB_SIMILARITY_THRESHHOLD_JP=0.52
       - TOPOSOID_WORD2VEC_SIMILARITY_THRESHHOLD_JP=0.68
@@ -193,7 +193,7 @@ services:
   toposoid-sentence-parser-english-web:
     image: toposoid/toposoid-sentence-parser-english-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.6
       - PLAY_HTTP_PORT=9007
       - TOPOSOID_CORENLP_HOST=172.30.0.8
       - TOPOSOID_PARSER_SPACY_MODEL_EN=en_core_web_md
@@ -205,7 +205,7 @@ services:
   toposoid-common-nlp-english-web:
     image: toposoid/toposoid-common-nlp-english-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=192.168.33.10
+      - PRIVATE_IP_ADDRESS=172.30.0.7
       - TOPOSOID_SYNONYM_NOUN_SIMILARITY_THRESHHOLD_EN=0.52
       - TOPOSOID_SYNONYM_VERB_SIMILARITY_THRESHHOLD_EN=0.52
       - TOPOSOID_WORD2VEC_SIMILARITY_THRESHHOLD_EN=0.78
