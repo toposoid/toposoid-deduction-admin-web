@@ -91,7 +91,7 @@ class HomeControllerSpecEnglish2 extends PlaySpec with BeforeAndAfter with Befor
   "The specification3-english(sentence-feature-match)" should {
     "returns an appropriate response" in {
       val sentenceA = "The culprit is among us."
-      val paraphraseA = "We confirmed that the culprit was one of us."
+      val paraphraseA = "The culprit was one of us."
       val propositionId1 = UUID.random.toString
       val sentenceId1 = UUID.random.toString
 
