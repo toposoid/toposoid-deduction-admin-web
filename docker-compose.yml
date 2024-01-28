@@ -10,11 +10,11 @@ networks:
 services:
   toposoid-deduction-admin-web:
     image: toposoid/toposoid-deduction-admin-web:0.5-SNAPSHOT
-    tty: true
     environment:
-      - GRAPHDB_HOST=172.30.0.2
       - PRIVATE_IP_ADDRESS=localhost
       - PLAY_HTTP_PORT=9003
+      - TOPOSOID_GRAPHDB_HOST=172.30.0.2
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - TOPOSOID_DEDUCTION_UNIT1_HOST=172.30.0.15
       - TOPOSOID_DEDUCTION_UNIT2_HOST=172.30.0.16
       - TOPOSOID_DEDUCTION_UNIT3_HOST=172.30.0.17
@@ -25,20 +25,19 @@ services:
       - TOPOSOID_DEDUCTION_UNIT3_PORT=9103
       - TOPOSOID_DEDUCTION_UNIT4_PORT=9104
       - TOPOSOID_DEDUCTION_UNIT5_PORT=9105
-      - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
     networks:
       app_net:
-        ipv4_address: 172.30.0.6
+        ipv4_address: 172.30.0.20
     ports:
       - 9003:9003
     depends_on:
       - toposoid-deduction-unit-exact-match-web
   toposoid-deduction-unit-exact-match-web:
-    image: toposoid/toposoid-deduction-unit-exact-match-web:0.5-SNAPSHOT-workflow
+    image: toposoid/toposoid-deduction-unit-exact-match-web:0.5
     environment:
-      - GRAPHDB_HOST=172.30.0.2
-      - PRIVATE_IP_ADDRESS=172.30.0.2
-      - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
+      - PRIVATE_IP_ADDRESS=172.30.0.15
+      - TOPOSOID_GRAPHDB_HOST=172.30.0.2
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - PLAY_HTTP_PORT=9101
     networks:
       app_net:
@@ -48,10 +47,10 @@ services:
     depends_on:
       - scala-data-accessor-neo4j-web
   toposoid-deduction-unit-synonym-match-web:
-    image: toposoid/toposoid-deduction-unit-synonym-match-web:0.5-SNAPSHOT-workflow
+    image: toposoid/toposoid-deduction-unit-synonym-match-web:0.5-SNAPSHOT
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.16
-      - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - PLAY_HTTP_PORT=9102
     networks:
       app_net:
@@ -61,10 +60,10 @@ services:
     depends_on:
       - scala-data-accessor-neo4j-web
   toposoid-deduction-unit-sentence-vector-match-web:
-    image: toposoid/toposoid-deduction-unit-sentence-vector-match-web:0.5-SNAPSHOT-workflow
+    image: toposoid/toposoid-deduction-unit-sentence-vector-match-web:0.5-SNAPSHOT
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.17
-      - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=172.30.0.5
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
       - TOPOSOID_COMMON_NLP_EN_WEB_HOST=172.30.0.7
@@ -83,10 +82,10 @@ services:
       - data-accessor-sentence-weaviate-web
 
   toposoid-deduction-unit-image-vector-match-web:
-    image: toposoid/toposoid-deduction-unit-image-vector-match-web:0.5-SNAPSHOT-workflow
+    image: toposoid/toposoid-deduction-unit-image-vector-match-web:0.5-SNAPSHOT
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.18
-      - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=172.30.0.5
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
       - TOPOSOID_COMMON_NLP_EN_WEB_HOST=172.30.0.7
@@ -113,10 +112,10 @@ services:
       - data-accessor-image-weaviate-web
 
   toposoid-deduction-unit-whole-sentence-image-match-web:
-    image: toposoid/toposoid-deduction-unit-whole-sentence-image-match-web:0.5-SNAPSHOT-workflow
+    image: toposoid/toposoid-deduction-unit-whole-sentence-image-match-web:0.5-SNAPSHOT
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.19
-      - SCALA_DATA_ACCESSOR_NEO4J_WEB_HOST=172.30.0.3
+      - TOPOSOID_GRAPHDB_WEB_HOST=172.30.0.3
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=172.30.0.5
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
       - TOPOSOID_COMMON_NLP_EN_WEB_HOST=172.30.0.7
@@ -137,18 +136,18 @@ services:
       - 9105:9105
 
   scala-data-accessor-neo4j-web:
-    image: toposoid/scala-data-accessor-neo4j-web:0.5-SNAPSHOT-workflow
+    image: toposoid/scala-data-accessor-neo4j-web:0.5-SNAPSHOT
     environment:
-      - GRAPHDB_HOST=172.30.0.2
       - PRIVATE_IP_ADDRESS=172.30.0.3
       - PLAY_HTTP_PORT=9005
+      - TOPOSOID_GRAPHDB_HOST=172.30.0.2
     networks:
       app_net:
         ipv4_address: 172.30.0.3
     ports:
       - 9005:9005
   toposoid-sentence-parser-japanese-web:
-    image: toposoid/toposoid-sentence-parser-japanese-web:0.5-SNAPSHOT-workflow
+    image: toposoid/toposoid-sentence-parser-japanese-web:0.5-SNAPSHOT
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.4
       - PLAY_HTTP_PORT=9001
@@ -158,14 +157,15 @@ services:
     ports:
       - 9001:9001
   toposoid-common-nlp-japanese-web:
-    image: toposoid/toposoid-common-nlp-japanese-web:0.5-SNAPSHOT-workflow
+    image: toposoid/toposoid-common-nlp-japanese-web:0.5-SNAPSHOT
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.5
-      - SYNONYM_NOUN_SIMILARITY_THRESHHOLD_JP=0.52
-      - SYNONYM_VERB_SIMILARITY_THRESHHOLD_JP=0.52
-      - WORD2VEC_SIMILARITY_THRESHHOLD_JP=0.68
-      - CHIVE_MODEL_VERSION=chive-1.2-mc90.kv
+      - TOPOSOID_SYNONYM_NOUN_SIMILARITY_THRESHHOLD_JP=0.52
+      - TOPOSOID_SYNONYM_VERB_SIMILARITY_THRESHHOLD_JP=0.52
+      - TOPOSOID_WORD2VEC_SIMILARITY_THRESHHOLD_JP=0.68
+      - TOPOSOID_CHIVE_MODEL_VERSION=chive-1.2-mc90.kv
       - TOPOSOID_SENTENCEBERT_MODEL_JP=sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+      - SENTENCE_TRANSFORMERS_HOME=./models
       - PLAY_HTTP_PORT=9006
     networks:
       app_net:
@@ -177,7 +177,8 @@ services:
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.6
       - PLAY_HTTP_PORT=9007
-      - CORENLP_HOST=172.30.0.8
+      - TOPOSOID_CORENLP_HOST=172.30.0.8
+      - TOPOSOID_PARSER_SPACY_MODEL_EN=en_core_web_lg
     networks:
       app_net:
         ipv4_address: 172.30.0.6
@@ -187,10 +188,12 @@ services:
     image: toposoid/toposoid-common-nlp-english-web:0.5-SNAPSHOT
     environment:
       - PRIVATE_IP_ADDRESS=172.30.0.7
-      - SYNONYM_NOUN_SIMILARITY_THRESHHOLD_EN=0.52
-      - SYNONYM_VERB_SIMILARITY_THRESHHOLD_EN=0.52
-      - WORD2VEC_SIMILARITY_THRESHHOLD_EN=0.78
+      - TOPOSOID_SYNONYM_NOUN_SIMILARITY_THRESHHOLD_EN=0.52
+      - TOPOSOID_SYNONYM_VERB_SIMILARITY_THRESHHOLD_EN=0.52
+      - TOPOSOID_WORD2VEC_SIMILARITY_THRESHHOLD_EN=0.78
+      - TOPOSOID_SPACY_MODEL_EN=en_core_web_lg
       - TOPOSOID_SENTENCEBERT_MODEL_EN=sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+      - SENTENCE_TRANSFORMERS_HOME=./models
       - PLAY_HTTP_PORT=9008
     networks:
       app_net:
@@ -238,7 +241,9 @@ services:
   toposoid-common-image-recognition-web:
     image: toposoid/toposoid-common-image-recognition-web:0.5-SNAPSHOT
     environment:
-      - TOPOSOID_IMAGE_RECOGNITION_MODEL=google/vit-base-patch16-224
+      - TOPOSOID_IMAGE_RECOGNITION_VIT_MODEL=google/vit-base-patch16-224
+      - TOPOSOID_IMAGE_RECOGNITION_MOBILE_VIT_MODEL=apple/mobilevit-small
+      - TOPOSOID_IMAGE_RECOGNITION_MOBILE_VIT_USE=0
     networks:
       app_net:
         ipv4_address: 172.30.0.10
