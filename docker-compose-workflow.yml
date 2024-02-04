@@ -109,7 +109,7 @@ services:
   toposoid-deduction-unit-whole-sentence-image-match-web:
     image: toposoid/toposoid-deduction-unit-whole-sentence-image-match-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=172.30.0.19
+      - PRIVATE_IP_ADDRESS=toposoid-deduction-unit-whole-sentence-image-match-web
       - TOPOSOID_GRAPHDB_WEB_HOST=scala-data-accessor-neo4j-web
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=toposoid-common-nlp-japanese-web
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
