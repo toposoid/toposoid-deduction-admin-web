@@ -53,7 +53,7 @@ services:
   toposoid-deduction-unit-synonym-match-web:
     image: toposoid/toposoid-deduction-unit-synonym-match-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=172.30.0.16
+      - PRIVATE_IP_ADDRESS=toposoid-deduction-unit-synonym-match-web
       - TOPOSOID_GRAPHDB_WEB_HOST=scala-data-accessor-neo4j-web
       - PLAY_HTTP_PORT=9102
     ports:
@@ -63,7 +63,7 @@ services:
   toposoid-deduction-unit-sentence-vector-match-web:
     image: toposoid/toposoid-deduction-unit-sentence-vector-match-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=172.30.0.17
+      - PRIVATE_IP_ADDRESS=toposoid-deduction-unit-sentence-vector-match-web
       - TOPOSOID_GRAPHDB_WEB_HOST=scala-data-accessor-neo4j-web
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=toposoid-common-nlp-japanese-web
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
@@ -82,7 +82,7 @@ services:
   toposoid-deduction-unit-image-vector-match-web:
     image: toposoid/toposoid-deduction-unit-image-vector-match-web:0.5-SNAPSHOT-lowspec
     environment:
-      - PRIVATE_IP_ADDRESS=172.30.0.18
+      - PRIVATE_IP_ADDRESS=toposoid-deduction-unit-image-vector-match-web
       - TOPOSOID_GRAPHDB_WEB_HOST=scala-data-accessor-neo4j-web
       - TOPOSOID_COMMON_NLP_JP_WEB_HOST=toposoid-common-nlp-japanese-web
       - TOPOSOID_COMMON_NLP_JP_WEB_PORT=9006
