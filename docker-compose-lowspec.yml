@@ -1,10 +1,10 @@
 version: '3'
 services:
   toposoid-deduction-admin-web:
-    image: toposoid-deduction-admin-web:0.5-SNAPSHOT
+    image: toposoid-deduction-admin-web:0.5-SNAPSHOT-lowspec
     tty: true
     environment:
-      - PRIVATE_IP_ADDRESS=toposoid-deduction-admin-web
+      - PRIVATE_IP_ADDRESS=localhost
       - PLAY_HTTP_PORT=9003
       - TOPOSOID_GRAPHDB_HOST=neo4j
       - TOPOSOID_GRAPHDB_WEB_HOST=scala-data-accessor-neo4j-web
