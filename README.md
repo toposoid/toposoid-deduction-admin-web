@@ -344,6 +344,157 @@ curl -X POST -H "Content-Type: application/json" -d '{
 }' http://localhost:9003/executeDeduction
 ```
 
+## Json details
+
+* AnalyzedSentenceObjects
+
+| name | type                         | explanation   |
+| ------------- |------------------------------|---------------|
+| analyzedSentenceObjects | List[AnalyzedSentenceObject] | see AnalyzedSentenceObject |
+
+
+* AnalyzedSentenceObject
+
+| name | type                           | explanation                                     |
+| ----------- |--------------------------------|-------------------------------------------------|
+| nodeMap | Map[String, KnowledgeBaseNode] | key:Node Identifier value:see KnowledgeBaseNode |
+|edgeList| List[KnowledgeBaseEdge]        | see KnowledgeBaseEdge                           |
+|knowledgeBaseSemiGlobalNode| KnowledgeBaseSemiGlobalNode| see KnowledgeBaseSemiGlobalNode                 |
+|deductionResult|DeductionResult| see DeductionResult                             |
+
+* KnowledgeBaseNode
+
+| name | type                           | explanation            |
+| ----------- |--------------------------------|------------------------|
+|nodeId| String                         | Node Identifier        |
+|propositionId| String                         | Proposition Identifier |
+|sentenceId| Stirng                         | Sentence  Identifier   |
+|predicateArgumentStructure| see PredicateArgumentStructure |
+|localContext| LocalContext| see LocalContext       |
+
+* PredicateArgumentStructure
+
+| name | type    | explanation            |
+| ----------- |---------|------------------------|
+|currentId| Int     ||
+|parentId| Int     ||
+|isMainSection| Boolean ||
+|surface| String  ||
+|normalizedName| String  ||
+|dependType| String  ||
+|caseType| String  ||
+|isDenialWord| Boolean ||
+|isConditionalConnection| Boolean ||
+|surfaceYomi| String  ||
+|modalityType| String  ||
+|parallelType| String  ||
+|nodeType| Int     ||
+|morphemes|  List[String]       ||
+
+* localContext
+
+| name | type    | explanation                                           |
+| ----------- |---------|-------------------------------------------------------|
+|lang|String| language locale                                       |
+|namedEntity|String| named entity                                          |
+|rangeExpressions| Map[String, Map[String, String]| uantity range representation                          |
+|categories|Map[String, String]| Category (For Japanese, see the KNP feature category) |
+|domains|Map[String, String]| Domain (For Japanese, refer to KNP's feature domain)  |
+|knowledgeFeatureReferences|List[KnowledgeFeatureReference]| see  KnowledgeFeatureReference |
+
+
+* KnowledgeFeatureReference
+
+| name | type   | explanation            |
+| ----------- |--------|------------------------|
+|propositionId| String | Proposition Identifier |
+|sentenceId| String | Sentence  Identifier   |
+|featureId| String | Feature  Identifier    |
+|featureType| Int    |                        |
+|url| String |                        |
+|source| String |                        |
+|featureInputType| Int    |                        |
+|extentText| String | Default:{}             |
+
+
+* KnowledgeBaseEdge
+
+| name | type    | explanation                                                                    |
+| ----------- |---------|--------------------------------------------------------------------------------|
+|sourceId| String  | ID that identifies the child of the dependency in the relation between clauses |
+|destinationId| String  | ID that identifies the dependent parent in the relation between clauses        |
+|caseStr| String  | Relations between clauses (case structure, etc.)                               |
+|dependType| String  | ref. KnowledgeBaseNode's dependType                                            |
+|parallelType| String  | ref. KnowledgeBaseNode's　parallelType                                          |
+|hasInclusion| Boolean | Presence of inclusion relationship                                             |
+|logicType| String  | ref. KnowledgeBaseNode's logicType                                             |
+
+
+* KnowledgeBaseSemiGlobalNode
+
+| name | type   | explanation                |
+| ----------- |--------|----------------------------|
+|propositionId| String | Proposition Identifier     |
+|sentenceId| String | Sentence  Identifier       |
+|sentence| String | sentence                   |
+|sentenceType| Int    | 0:Premise, 1:Claim         |
+|localContextForFeature|LocalContextForFeature| see LocalContextForFeature |
+
+
+* LocalContextForFeature
+
+| name | type   | explanation |
+| ----------- |--------|-------------|
+|lang| String | language locale  |
+|knowledgeFeatureReferences|    List[KnowledgeFeatureReference]    | see  KnowledgeFeatureReference       |
+
+* DeductionResult
+
+| name | type                           | explanation |
+| ----------- |--------------------------------|-------------|
+|status| Boolean                        |             |
+|coveredPropositionResults| List[CoveredPropositionResult] | see CoveredPropositionResult |
+|havePremiseInGivenProposition| Boolean                        |             |
+
+* CoveredPropositionResult
+
+| name | type    | explanation                 |
+| ----------- |---------|-----------------------------|
+|deductionUnit| String  |                             |
+|sentenceId| String  | Sentence  Identifier        |
+|coveredPropositionEdges|  List[CoveredPropositionEdge]       | see  CoveredPropositionEdge |
+|knowledgeBaseSideInfoList| List[KnowledgeBaseSideInfo]        | see     KnowledgeBaseSideInfo  |
+
+* CoveredPropositionEdge
+
+| name | type    | explanation                |
+| ----------- |---------|----------------------------|
+|sourceNode|CoveredPropositionNode| see CoveredPropositionNode |
+|destinationNode|CoveredPropositionNode| see CoveredPropositionNode|
+
+* CoveredPropositionNode
+
+| name | type   | explanation                |
+| ----------- |--------|----------------------------|
+|terminalId| String ||
+|terminalSurface|String||
+|terminalUrl|String||
+
+* KnowledgeBaseSideInfo
+
+| name | type   | explanation |
+| ----------- |--------|-------------|
+|propositionId| String |Proposition Identifier|
+|sentenceId| String |   Sentence  Identifier          |
+|featureInfoList|List[MatchedFeatureInfo]| see MatchedFeatureInfo        |
+
+* MatchedFeatureInfo
+
+| name | type   | explanation |
+| ----------- |--------|-------------|
+|featureId| String | Feature Identifier    |
+|similarity| Float  |Similarity during matching|
+
 # Note
 
 ## License
