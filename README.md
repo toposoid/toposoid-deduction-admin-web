@@ -8,48 +8,67 @@ This microservice provides the ability to manage multiple deductive inference lo
 The functions of this microservice are in the red frame below.
 <img width="1136" alt="" src="https://user-images.githubusercontent.com/82787843/169642794-6cf4c50f-a7e5-4688-bf3e-9994dfbedbc8.png">
 
-- API Image
-<img width="1201" src="https://user-images.githubusercontent.com/82787843/135613475-1431ddaa-5a4c-4f82-8346-51b41987da2e.png">
-
-<img width="1201"  src="https://user-images.githubusercontent.com/82787843/212541658-9f73894d-ab76-4b7c-a518-1772e712e232.png">
+* API Image
+  * Input
+  * <img width="1026" src="https://github.com/toposoid/toposoid-deduction-admin-web/assets/82787843/de405363-5823-477c-b327-14f2ebf49116">
+  * Output
+  * <img width="1022" src="https://github.com/toposoid/toposoid-deduction-admin-web/assets/82787843/28d7a331-61fb-4f7c-a4e7-24047a71ae06">
 
 
 ## Requirements
 * Docker version 20.10.x, or later
 * docker-compose version 1.22.x
 
-### Memory requirements
-* Required: at least 20GB of RAM
+### Recommended Environment For Standalone
+* Required: at least 16GB of RAM
 * Required: 50G or higher　of HDD
+* Please understand that since we are dealing with large models such as LLM, the Dockerfile size is large and the required machine SPEC is high.
 
-## Setup
+## Setup For Standalone
 ```bssh
-rm -f vald-config/backup/* && docker-compose up -d
+docker-compose up
 ```
-* It takes more than 20 minutes to pull the Docker image for the first time.
-* **The docker-compose.yml configuration in this repository does not take into account vald and neo4j persistence.**
-* If vald does not start due to an error, commenting out the following part in docker-compose.yml may work.
-```yml
-  vald:
-    image: vdaas/vald-agent-ngt:v1.6.3
-    #user: 1000:1000
-    volumes:
-      - ./vald-config:/etc/server
-      #- /etc/passwd:/etc/passwd:ro
-      #- /etc/group:/etc/group:ro
-    networks:
-      app_net:
-        ipv4_address: 172.30.0.10
-    ports:
-      - 8081:8081
-```
+* The first startup takes a long time until docker pull finishes.
 
 ## Usage
 ```bash
+# Please refer to the following for information on registering data to try deduction.
+# ref. https://github.com/toposoid/toposoid-knowledge-register-web
+#for example
+curl -X POST -H "Content-Type: application/json" -d '{
+    "premiseList": [],
+    "premiseLogicRelation": [],
+    "claimList": [
+        {
+            "sentence": "猫が２匹います。",
+            "lang": "ja_JP",
+            "extentInfoJson": "{}",
+            "isNegativeSentence": false,
+            "knowledgeForImages":[{
+                "id": "",
+                "imageReference": {
+                    "reference": {
+                        "url": "",
+                        "surface": "猫が",
+                        "surfaceIndex": 0,
+                        "isWholeSentence": false,
+                        "originalUrlOrReference": "http://images.cocodataset.org/val2017/000000039769.jpg"},
+                    "x": 11,
+                    "y": 11,
+                    "width": 466,
+                    "height": 310
+                }
+            }]
+        }
+    ],
+    "claimLogicRelation": [
+    ]
+}' http://localhost:9002/regist
+
 curl -X POST -H "Content-Type: application/json" -d '{
     "index": 0,   
     "function":{      
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": "9101",
         "sentenceType": 0        
     }
@@ -59,285 +78,176 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "analyzedSentenceObjects": [
         {
             "nodeMap": {
-                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-0": {
-                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-0",
-                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
-                    "currentId": 0,
-                    "parentId": 1,
-                    "isMainSection": false,
-                    "surface": "自然界の",
-                    "normalizedName": "自然",
-                    "dependType": "D",
-                    "caseType": "ノ格",
-                    "namedEntity": "",
-                    "rangeExpressions": {
-                        "": {}
+                "31bd069d-6b34-48fc-a687-9e8b5c91e61b-2": {
+                    "nodeId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b-2",
+                    "propositionId": "da9e9a6a-6e09-43e8-9e85-7be71a5e3e5b",
+                    "sentenceId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b",
+                    "predicateArgumentStructure": {
+                        "currentId": 2,
+                        "parentId": -1,
+                        "isMainSection": true,
+                        "surface": "います。",
+                        "normalizedName": "射る",
+                        "dependType": "D",
+                        "caseType": "文末",
+                        "isDenialWord": false,
+                        "isConditionalConnection": false,
+                        "normalizedNameYomi": "いる?居る",
+                        "surfaceYomi": "います。",
+                        "modalityType": "-",
+                        "parallelType": "-",
+                        "nodeType": 1,
+                        "morphemes": [
+                            "動詞,*,母音動詞,基本連用形",
+                            "接尾辞,動詞性接尾辞,動詞性接尾辞ます型,基本形",
+                            "特殊,句点,*,*"
+                        ]
                     },
-                    "categories": {
-                        "": "",
-                        "界": "抽象物"
-                    },
-                    "domains": {
-                        "": ""
-                    },
-                    "isDenialWord": false,
-                    "isConditionalConnection": false,
-                    "normalizedNameYomi": "しぜんかい?境",
-                    "surfaceYomi": "しぜんかいの",
-                    "modalityType": "-",
-                    "logicType": "-",
-                    "nodeType": 1,
-                    "lang": "ja_JP",
-                    "extentText": "{}"
+                    "localContext": {
+                        "lang": "ja_JP",
+                        "namedEntity": "",
+                        "rangeExpressions": {
+                            "": {}
+                        },
+                        "categories": {
+                            "": ""
+                        },
+                        "domains": {
+                            "": ""
+                        },
+                        "knowledgeFeatureReferences": []
+                    }
                 },
-                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-1": {
-                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-1",
-                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
-                    "currentId": 1,
-                    "parentId": 6,
-                    "isMainSection": false,
-                    "surface": "物理法則は",
-                    "normalizedName": "物理",
-                    "dependType": "D",
-                    "caseType": "未格",
-                    "namedEntity": "",
-                    "rangeExpressions": {
-                        "": {}
+                "31bd069d-6b34-48fc-a687-9e8b5c91e61b-1": {
+                    "nodeId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b-1",
+                    "propositionId": "da9e9a6a-6e09-43e8-9e85-7be71a5e3e5b",
+                    "sentenceId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b",
+                    "predicateArgumentStructure": {
+                        "currentId": 1,
+                        "parentId": 2,
+                        "isMainSection": false,
+                        "surface": "２匹",
+                        "normalizedName": "２",
+                        "dependType": "D",
+                        "caseType": "無格",
+                        "isDenialWord": false,
+                        "isConditionalConnection": false,
+                        "normalizedNameYomi": "にひき",
+                        "surfaceYomi": "にひき",
+                        "modalityType": "-",
+                        "parallelType": "-",
+                        "nodeType": 1,
+                        "morphemes": [
+                            "名詞,数詞,*,*",
+                            "接尾辞,名詞性名詞助数辞,*,*"
+                        ]
                     },
-                    "categories": {
-                        "物理": "抽象物",
-                        "法則": "抽象物"
-                    },
-                    "domains": {
-                        "物理": "教育・学習;科学・技術",
-                        "": ""
-                    },
-                    "isDenialWord": false,
-                    "isConditionalConnection": false,
-                    "normalizedNameYomi": "ぶつりほうそく",
-                    "surfaceYomi": "ぶつりほうそくは",
-                    "modalityType": "-",
-                    "logicType": "-",
-                    "nodeType": 1,
-                    "lang": "ja_JP",
-                    "extentText": "{}"
+                    "localContext": {
+                        "lang": "ja_JP",
+                        "namedEntity": "",
+                        "rangeExpressions": {
+                            "２": {
+                                "prefix": "",
+                                "quantity": "2",
+                                "unit": "匹",
+                                "range": "2"
+                            }
+                        },
+                        "categories": {
+                            "２": "数量"
+                        },
+                        "domains": {
+                            "": ""
+                        },
+                        "knowledgeFeatureReferences": []
+                    }
                 },
-                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6": {
-                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6",
-                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
-                    "currentId": 6,
-                    "parentId": -1,
-                    "isMainSection": true,
-                    "surface": "成立する。",
-                    "normalizedName": "成立",
-                    "dependType": "D",
-                    "caseType": "文末",
-                    "namedEntity": "",
-                    "rangeExpressions": {
-                        "": {}
+                "31bd069d-6b34-48fc-a687-9e8b5c91e61b-0": {
+                    "nodeId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b-0",
+                    "propositionId": "da9e9a6a-6e09-43e8-9e85-7be71a5e3e5b",
+                    "sentenceId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b",
+                    "predicateArgumentStructure": {
+                        "currentId": 0,
+                        "parentId": 2,
+                        "isMainSection": false,
+                        "surface": "ペットが",
+                        "normalizedName": "ペット",
+                        "dependType": "D",
+                        "caseType": "ガ格",
+                        "isDenialWord": false,
+                        "isConditionalConnection": false,
+                        "normalizedNameYomi": "ぺっと",
+                        "surfaceYomi": "ぺっとが",
+                        "modalityType": "-",
+                        "parallelType": "-",
+                        "nodeType": 1,
+                        "morphemes": [
+                            "名詞,普通名詞,*,*",
+                            "助詞,格助詞,*,*"
+                        ]
                     },
-                    "categories": {
-                        "成立": "抽象物"
-                    },
-                    "domains": {
-                        "": ""
-                    },
-                    "isDenialWord": false,
-                    "isConditionalConnection": false,
-                    "normalizedNameYomi": "せいりつ",
-                    "surfaceYomi": "せいりつする。",
-                    "modalityType": "-",
-                    "logicType": "-",
-                    "nodeType": 1,
-                    "lang": "ja_JP",
-                    "extentText": "{}"
-                },
-                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-4": {
-                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-4",
-                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
-                    "currentId": 4,
-                    "parentId": 5,
-                    "isMainSection": false,
-                    "surface": "どの",
-                    "normalizedName": "どの",
-                    "dependType": "D",
-                    "caseType": "連体",
-                    "namedEntity": "",
-                    "rangeExpressions": {
-                        "": {}
-                    },
-                    "categories": {
-                        "": ""
-                    },
-                    "domains": {
-                        "": ""
-                    },
-                    "isDenialWord": false,
-                    "isConditionalConnection": false,
-                    "normalizedNameYomi": "どの",
-                    "surfaceYomi": "どの",
-                    "modalityType": "-",
-                    "logicType": "-",
-                    "nodeType": 1,
-                    "lang": "ja_JP",
-                    "extentText": "{}"
-                },
-                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-2": {
-                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-2",
-                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
-                    "currentId": 2,
-                    "parentId": 3,
-                    "isMainSection": false,
-                    "surface": "例外",
-                    "normalizedName": "例外",
-                    "dependType": "D",
-                    "caseType": "未格",
-                    "namedEntity": "",
-                    "rangeExpressions": {
-                        "": {}
-                    },
-                    "categories": {
-                        "例外": "抽象物"
-                    },
-                    "domains": {
-                        "": ""
-                    },
-                    "isDenialWord": false,
-                    "isConditionalConnection": false,
-                    "normalizedNameYomi": "れいがい",
-                    "surfaceYomi": "れいがい",
-                    "modalityType": "-",
-                    "logicType": "-",
-                    "nodeType": 1,
-                    "lang": "ja_JP",
-                    "extentText": "{}"
-                },
-                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-5": {
-                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-5",
-                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
-                    "currentId": 5,
-                    "parentId": 6,
-                    "isMainSection": false,
-                    "surface": "慣性系でも",
-                    "normalizedName": "慣性",
-                    "dependType": "D",
-                    "caseType": "デ格",
-                    "namedEntity": "",
-                    "rangeExpressions": {
-                        "": {}
-                    },
-                    "categories": {
-                        "": "",
-                        "系": "抽象物"
-                    },
-                    "domains": {
-                        "": ""
-                    },
-                    "isDenialWord": false,
-                    "isConditionalConnection": false,
-                    "normalizedNameYomi": "かんせいけい",
-                    "surfaceYomi": "かんせいけいでも",
-                    "modalityType": "-",
-                    "logicType": "AND",
-                    "nodeType": 1,
-                    "lang": "ja_JP",
-                    "extentText": "{}"
-                },
-                "4df8a375-189c-46cb-b8b7-cd4f47fe285f-3": {
-                    "nodeId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-3",
-                    "propositionId": "e171b187-75a9-4851-beb9-5463ed95d8c4",
-                    "currentId": 3,
-                    "parentId": 6,
-                    "isMainSection": false,
-                    "surface": "なく",
-                    "normalizedName": "無い",
-                    "dependType": "D",
-                    "caseType": "連用",
-                    "namedEntity": "",
-                    "rangeExpressions": {
-                        "": {}
-                    },
-                    "categories": {
-                        "": ""
-                    },
-                    "domains": {
-                        "": ""
-                    },
-                    "isDenialWord": false,
-                    "isConditionalConnection": false,
-                    "normalizedNameYomi": "ない",
-                    "surfaceYomi": "なく",
-                    "modalityType": "-",
-                    "logicType": "-",
-                    "nodeType": 1,
-                    "lang": "ja_JP",
-                    "extentText": "{}"
+                    "localContext": {
+                        "lang": "ja_JP",
+                        "namedEntity": "",
+                        "rangeExpressions": {
+                            "": {}
+                        },
+                        "categories": {
+                            "ペット": "動物"
+                        },
+                        "domains": {
+                            "ペット": "家庭・暮らし"
+                        },
+                        "knowledgeFeatureReferences": [
+                            {
+                                "propositionId": "da9e9a6a-6e09-43e8-9e85-7be71a5e3e5b",
+                                "sentenceId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b",
+                                "featureId": "4254cb90-e53c-46d5-9aba-6c48897caeaf",
+                                "featureType": 1,
+                                "url": "http://toposoid-contents-admin-web:9012/contents/images/92025d59-3c3b-4d8f-9ec6-13ef38574281.jpeg",
+                                "source": "http://images.cocodataset.org/val2017/000000039769.jpg",
+                                "featureInputType": 0,
+                                "extentText": "{}"
+                            }
+                        ]
+                    }
                 }
             },
             "edgeList": [
                 {
-                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-5",
-                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6",
-                    "caseStr": "デ格",
+                    "sourceId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b-1",
+                    "destinationId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b-2",
+                    "caseStr": "無格",
                     "dependType": "D",
-                    "logicType": "AND",
-                    "lang": "ja_JP"
+                    "parallelType": "-",
+                    "hasInclusion": false,
+                    "logicType": "-"
                 },
                 {
-                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-4",
-                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-5",
-                    "caseStr": "連体",
+                    "sourceId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b-0",
+                    "destinationId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b-2",
+                    "caseStr": "ガ格",
                     "dependType": "D",
-                    "logicType": "-",
-                    "lang": "ja_JP"
-                },
-                {
-                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-3",
-                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6",
-                    "caseStr": "連用",
-                    "dependType": "D",
-                    "logicType": "-",
-                    "lang": "ja_JP"
-                },
-                {
-                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-2",
-                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-3",
-                    "caseStr": "未格",
-                    "dependType": "D",
-                    "logicType": "-",
-                    "lang": "ja_JP"
-                },
-                {
-                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-1",
-                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-6",
-                    "caseStr": "未格",
-                    "dependType": "D",
-                    "logicType": "-",
-                    "lang": "ja_JP"
-                },
-                {
-                    "sourceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-0",
-                    "destinationId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f-1",
-                    "caseStr": "ノ格",
-                    "dependType": "D",
-                    "logicType": "-",
-                    "lang": "ja_JP"
+                    "parallelType": "-",
+                    "hasInclusion": false,
+                    "logicType": "-"
                 }
             ],
-            "sentenceType": 1,
-            "sentenceId": "4df8a375-189c-46cb-b8b7-cd4f47fe285f",
-            "lang": "ja_JP",
-            "deductionResultMap": {
-                "0": {
-                    "status": false,
-                    "matchedPropositionIds": [],
-                    "deductionUnit": ""
-                },
-                "1": {
-                    "status": false,
-                    "matchedPropositionIds": [],
-                    "deductionUnit": ""
+            "knowledgeBaseSemiGlobalNode": {
+                "nodeId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b",
+                "propositionId": "da9e9a6a-6e09-43e8-9e85-7be71a5e3e5b",
+                "sentenceId": "31bd069d-6b34-48fc-a687-9e8b5c91e61b",
+                "sentence": "ペットが２匹います。",
+                "sentenceType": 1,
+                "localContextForFeature": {
+                    "lang": "ja_JP",
+                    "knowledgeFeatureReferences": []
                 }
+            },
+            "deductionResult": {
+                "status": false,
+                "coveredPropositionResults": [],
+                "havePremiseInGivenProposition": false
             }
         }
     ]
@@ -374,22 +284,22 @@ curl -X POST -H "Content-Type: application/json" -d '{
 
 * PredicateArgumentStructure
 
-| name | type    | explanation            |
-| ----------- |---------|------------------------|
-|currentId| Int     ||
-|parentId| Int     ||
-|isMainSection| Boolean ||
-|surface| String  ||
-|normalizedName| String  ||
-|dependType| String  ||
-|caseType| String  ||
-|isDenialWord| Boolean ||
-|isConditionalConnection| Boolean ||
-|surfaceYomi| String  ||
-|modalityType| String  ||
-|parallelType| String  ||
-|nodeType| Int     ||
-|morphemes|  List[String]       ||
+| name | type    | explanation                                                                          |
+| ----------- |---------|--------------------------------------------------------------------------------------|
+|currentId| Int     | ID that identifies which clause of the sentence                                      |
+|parentId| Int     | ID of the clause to which the relevant clause relates                                |
+|isMainSection| Boolean | Flag indicating end of sentence true/false                                           |
+|surface| String  | expression of clauses                                                                |
+|normalizedName| String  | Normalized expression of clauses                                                     |
+|dependType| String  | Relationship with parent clause Dependency relationship: D, Parallel relationship: P |
+|caseType| String  | Clause case information                                                              |
+|isDenialWord| Boolean | Flag representing negative expression true/false                                     |
+|isConditionalConnection| Boolean | Flags representing conditional clauses and similar clauses                           |
+|surfaceYomi| String  | Pronunciation of normalized expression of clauses                                    |
+|modalityType| String  | Type of modality                                                                     |
+|parallelType| String  | Type of  parallel                                                                            |
+|nodeType| Int     |   com.ideal.linked.toposoid.common.SentenceType                                                                                   |
+|morphemes|  List[String]       |  Morphological analysis results                                                                                    |
 
 * localContext
 
@@ -405,16 +315,16 @@ curl -X POST -H "Content-Type: application/json" -d '{
 
 * KnowledgeFeatureReference
 
-| name | type   | explanation            |
-| ----------- |--------|------------------------|
-|propositionId| String | Proposition Identifier |
-|sentenceId| String | Sentence  Identifier   |
-|featureId| String | Feature  Identifier    |
-|featureType| Int    |                        |
-|url| String |                        |
-|source| String |                        |
-|featureInputType| Int    |                        |
-|extentText| String | Default:{}             |
+| name | type   | explanation                                  |
+| ----------- |--------|----------------------------------------------|
+|propositionId| String | Proposition Identifier                       |
+|sentenceId| String | Sentence  Identifier                         |
+|featureId| String | Feature  Identifier                          |
+|featureType| Int    | com.ideal.linked.toposoid.common。FeatureType |
+|url| String | Feature information URL                      |
+|source| String | Feature informatio　Source                    |
+|featureInputType| Int    | com.ideal.linked.toposoid.common.DataEntryType            |
+|extentText| String | Default:{}                                   |
 
 
 * KnowledgeBaseEdge
