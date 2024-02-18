@@ -77,6 +77,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       val json = request.body
       val reqSelector: ReqSelector = Json.parse(json.toString).as[ReqSelector]
       endPoints = endPoints.updated(reqSelector.index, reqSelector.function)
+      logger.info(endPoints.toString())
       Ok("""{"status":"OK"}""").as(JSON)
     }catch {
       case e: Exception => {
@@ -106,6 +107,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
   def executeDeduction()  = Action(parse.json) { request =>
     try {
       val json = request.body
+      logger.info(endPoints.toString())
       val jsonStr:String = getCypherQueryResult("MATCH (n) RETURN n limit 1;", "")
       if(jsonStr.equals("""{"records":[]}""")) Ok(json.toString()).as(JSON)
       val result = deduce(0, json.toString(), json.toString())
