@@ -19,7 +19,7 @@ package controllers
 import akka.util.Timeout
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.data.accessor.neo4j.Neo4JAccessor
-import com.ideal.linked.toposoid.common.{CLAIM, ToposoidUtils}
+import com.ideal.linked.toposoid.common.{CLAIM, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, Reference}
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
 import com.ideal.linked.toposoid.protocol.model.parser.{InputSentenceForParser, KnowledgeForParser}
@@ -38,9 +38,11 @@ import scala.concurrent.duration.DurationInt
 
 class HomeControllerSpecEnglish2 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting{
 
+  val transversalState:String = Json.toJson(TransversalState(username="guest")).toString()
+  
   before {
-    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_PORT"), "createSchema")
-    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_PORT"), "createSchema")
+    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_PORT"), "createSchema", TransversalState(username="guest"))
+    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_PORT"), "createSchema", TransversalState(username="guest"))
     Neo4JAccessor.delete()
     Thread.sleep(1000)
   }
@@ -79,7 +81,7 @@ class HomeControllerSpecEnglish2 extends PlaySpec with BeforeAndAfter with Befor
           |}""".stripMargin.format(index, endPointInfo._1, endPointInfo._2)
 
       val fr1 = FakeRequest(POST, "/changeEndPoints")
-        .withHeaders("Content-type" -> "application/json")
+        .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalState)
         .withJsonBody(Json.parse(json))
 
       val result1 = call(controller.changeEndPoints(), fr1)
@@ -106,10 +108,10 @@ class HomeControllerSpecEnglish2 extends PlaySpec with BeforeAndAfter with Befor
       val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
 
       //val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("Living is so comfortable.","en_US", "{}", false)))).toString()
-      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze")
+      val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze", TransversalState(username="guest"))
 
       val fr4 = FakeRequest(POST, "/executeDeduction")
-        .withHeaders("Content-type" -> "application/json")
+        .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalState)
         .withJsonBody(Json.parse(json4))
 
       val result4 = call(controller.executeDeduction(), fr4)
@@ -160,7 +162,7 @@ class HomeControllerSpecEnglish2 extends PlaySpec with BeforeAndAfter with Befor
       val json: String = Json.toJson(asos).toString()
 
       val fr = FakeRequest(POST, "/executeDeduction")
-        .withHeaders("Content-type" -> "application/json")
+        .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalState)
         .withJsonBody(Json.parse(json))
 
       val result = call(controller.executeDeduction(), fr)

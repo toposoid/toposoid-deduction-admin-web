@@ -22,14 +22,13 @@ import play.api.mvc._
 import play.api.libs.json.Json
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.common.{EntityStreamingSupport, JsonEntityStreamingSupport}
+import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl._
-import akka.stream.{ActorMaterializer, ClosedShape}
-import akka.stream.scaladsl.{Flow, GraphDSL, Sink, Source}
+import akka.stream.{ActorMaterializer}
 import com.ideal.linked.common.DeploymentConverter.conf
-import com.ideal.linked.toposoid.common.{CLAIM, PREMISE}
+import com.ideal.linked.toposoid.common.{CLAIM, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.deduction.common.FacadeForAccessNeo4J.getCypherQueryResult
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
 import com.typesafe.scalalogging.LazyLogging
@@ -73,26 +72,28 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * @return
    */
   def changeEndPoints()  = Action(parse.json) { request =>
+    val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
     try{
       val json = request.body
       val reqSelector: ReqSelector = Json.parse(json.toString).as[ReqSelector]
       endPoints = endPoints.updated(reqSelector.index, reqSelector.function)
-      logger.info(endPoints.toString())
+      logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + endPoints.toString(), transversalState.username))
       Ok("""{"status":"OK"}""").as(JSON)
     }catch {
       case e: Exception => {
-        logger.error(e.toString, e)
+        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
         BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
       }
     }
   }
 
   def getEndPoints() = Action(parse.json) { request =>
+    val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
     try {
       Ok(Json.toJson(endPoints)).as(JSON)
     } catch {
       case e: Exception => {
-        logger.error(e.toString, e)
+        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
         BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
       }
     }
@@ -105,28 +106,30 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * @return
    */
   def executeDeduction()  = Action(parse.json) { request =>
+    val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
     try {
       val json = request.body
       logger.info(endPoints.toString())
-      val jsonStr:String = getCypherQueryResult("MATCH (n) RETURN n limit 1;", "")
+      val jsonStr:String = getCypherQueryResult("MATCH (n) RETURN n limit 1;", "", transversalState)
       if(jsonStr.equals("""{"records":[]}""")) Ok(json.toString()).as(JSON)
-      val result = deduce(0, json.toString(), json.toString())
+      val result = deduce(0, json.toString(), json.toString(), transversalState)
+      logger.info(ToposoidUtils.formatMessageForLogger("All deduction units have been completed.", transversalState.username))
       Ok(result._3).as(JSON)
 
     }catch {
       case e: Exception => {
-        logger.error(e.toString, e)
+        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
         BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
       }
     }
   }
 
-  private def deduce(index:Int, targetJson:String, resultJson:String): (Int, String, String) ={
-    val asosJson = execute(endPoints(index), targetJson, resultJson)
+  private def deduce(index:Int, targetJson:String, resultJson:String, transversalState:TransversalState): (Int, String, String) ={
+    val asosJson = execute(endPoints(index), targetJson, resultJson, transversalState)
     if(index == endPoints.size -1){
       (index, asosJson._1, asosJson._2)
     }else{
-      deduce(index + 1, asosJson._1, asosJson._2)
+      deduce(index + 1, asosJson._1, asosJson._2, transversalState)
     }
   }
 
@@ -136,7 +139,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * @return
    */
 
-  private def execute(endpoint:Endpoint, targetJson:String, resultJson:String): (String, String) ={
+  private def execute(endpoint:Endpoint, targetJson:String, resultJson:String, transversalState:TransversalState): (String, String) ={
 
     if(endpoint.host.equals(NO_HOST) || endpoint.port.equals(NO_PORT)) return (targetJson, resultJson)
     implicit val system = ActorSystem()
@@ -156,6 +159,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       val targets:List[AnalyzedSentenceObject] = notFinished
       val entity = HttpEntity(ContentTypes.`application/json`, Json.toJson(AnalyzedSentenceObjects(targets)).toString())
       val req = HttpRequest(uri = "http://" + endpoint.host + ":" + endpoint.port + "/execute", method = HttpMethods.POST, entity = entity)
+                  .withHeaders(RawHeader(TRANSVERSAL_STATE.str, Json.toJson(transversalState).toString()))
       val result = Http().singleRequest(req)
         .flatMap { res =>
           Unmarshal(res).to[String].map { data =>
@@ -166,7 +170,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
         case Success(js) =>
           logger.debug(js.toString())
         case Failure(e) =>
-          logger.error(e.toString, e)
+          logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
       }
       while(!result.isCompleted){
         Thread.sleep(20)
