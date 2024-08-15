@@ -104,9 +104,10 @@ class HomeControllerSpecJapanese0 extends PlaySpec with BeforeAndAfter with Befo
             |    "index": %d,
             |    "function":{
             |        "host": "%s",
-            |        "port": "%s"
+            |        "port": "%s",
+            |        "name": "%s"
             |    }
-            |}""".stripMargin.format(index, "-", "-")
+            |}""".stripMargin.format(index, "-", "-", "-")
 
         val fr1 = FakeRequest(POST, "/changeEndPoints")
           .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalState)

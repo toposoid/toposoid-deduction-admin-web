@@ -59,10 +59,11 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
         case true => {
           val host = conf.getString("TOPOSOID_DEDUCTION_UNIT%d_HOST".format(index + 1))
           val port = conf.getString("TOPOSOID_DEDUCTION_UNIT%d_PORT".format(index + 1))
-          (host, port)
+          val name = conf.getString("TOPOSOID_DEDUCTION_UNIT%d_NAME".format(index + 1))
+          (host, port, name)
         }
         case _ => {
-          ("-", "-")
+          ("-", "-", "-")
         }
       }
       val json =
@@ -70,9 +71,10 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
           |    "index": %d,
           |    "function":{
           |        "host": "%s",
-          |        "port": "%s"
+          |        "port": "%s",
+          |        "name": "%s"
           |    }
-          |}""".stripMargin.format(index, endPointInfo._1, endPointInfo._2)
+          |}""".stripMargin.format(index, endPointInfo._1, endPointInfo._2, endPointInfo._3)
 
       val fr1 = FakeRequest(POST, "/changeEndPoints")
         .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalState)
