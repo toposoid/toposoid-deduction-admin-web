@@ -26,11 +26,12 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl._
-import akka.stream.{ActorMaterializer}
+import akka.stream.ActorMaterializer
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.toposoid.common.{CLAIM, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.deduction.common.FacadeForAccessNeo4J.getCypherQueryResult
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
+import com.ideal.linked.toposoid.protocol.model.redis.UserInfo
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.{Failure, Success}
@@ -46,6 +47,7 @@ object ReqSelector {
   implicit val jsonWrites = Json.writes[ReqSelector]
   implicit val jsonReads = Json.reads[ReqSelector]
 }
+
 
 /**
  * This controller creates an `Action` to manage multiple deductive inference logic to register,
@@ -63,7 +65,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT3_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT3_PORT")),
     Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT4_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT4_PORT")),
     Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT5_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT5_PORT")))
-  private var endPoints:Seq[Endpoint] = defaultEndPoints
+  //private var endPoints:Seq[Endpoint] = defaultEndPoints
   //private var targetJson:String = ""
 
   /**
@@ -76,8 +78,8 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     try{
       val json = request.body
       val reqSelector: ReqSelector = Json.parse(json.toString).as[ReqSelector]
-      endPoints = endPoints.updated(reqSelector.index, reqSelector.function)
-      logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + endPoints.toString(), transversalState.username))
+      val updatedEndPoints:Seq[Endpoint] = setEndPoints(reqSelector, transversalState)
+      logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + updatedEndPoints.toString(), transversalState.username))
       Ok("""{"status":"OK"}""").as(JSON)
     }catch {
       case e: Exception => {
@@ -90,7 +92,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
   def getEndPoints() = Action(parse.json) { request =>
     val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
     try {
-      Ok(Json.toJson(endPoints)).as(JSON)
+      Ok(Json.toJson(getEndPointsFromInMemoryDB(transversalState))).as(JSON)
     } catch {
       case e: Exception => {
         logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
@@ -109,10 +111,14 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
     try {
       val json = request.body
-      logger.info(endPoints.toString())
+
+      //TODO: REDISから情報を取得
+      val currentEndPoints = getEndPointsFromInMemoryDB(transversalState)
+
+      logger.info(currentEndPoints.toString())
       val jsonStr:String = getCypherQueryResult("MATCH (n) RETURN n limit 1;", "", transversalState)
       if(jsonStr.equals("""{"records":[]}""")) Ok(json.toString()).as(JSON)
-      val result = deduce(0, json.toString(), json.toString(), transversalState)
+      val result = deduce(0, json.toString(), json.toString(), currentEndPoints, transversalState)
       logger.info(ToposoidUtils.formatMessageForLogger("All deduction units have been completed.", transversalState.username))
       Ok(result._3).as(JSON)
 
@@ -124,12 +130,52 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     }
   }
 
-  private def deduce(index:Int, targetJson:String, resultJson:String, transversalState:TransversalState): (Int, String, String) ={
+
+  private def getEndPointsFromInMemoryDB(transversalState:TransversalState):Seq[Endpoint] = {
+    val userInfo = UserInfo(user = transversalState.username, key = "DEDUCTION_UNIT_ENDPOINTS", value = "")
+    val responseJson = ToposoidUtils.callComponent(
+      Json.toJson(userInfo).toString(),
+      conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_HOST"),
+      conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_PORT"),
+      "getUserData",
+      transversalState)
+    val responseUserInfo: UserInfo = Json.parse(responseJson).as[UserInfo]
+    responseUserInfo.value match {
+      case "" => setEndPoints(null, transversalState)
+      case _ => Json.parse(responseUserInfo.value).as[Seq[Endpoint]]
+    }
+  }
+
+  private def setEndPoints(reqSelector:ReqSelector, transversalState:TransversalState):Seq[Endpoint] = {
+
+    val updatedEndPoints:Seq[Endpoint] = Option(reqSelector) match {
+      case Some(x) => {
+        val currentEndPoints = getEndPointsFromInMemoryDB(transversalState)
+        currentEndPoints.updated(reqSelector.index, reqSelector.function)
+      }
+      case None => defaultEndPoints
+    }
+
+    val userInfo = UserInfo (user = transversalState.username, key = "DEDUCTION_UNIT_ENDPOINTS", value = Json.toJson(updatedEndPoints).toString())
+    val responseJson = ToposoidUtils.callComponent (
+    Json.toJson (userInfo).toString (),
+    conf.getString ("TOPOSOID_IN_MEMORY_DB_WEB_HOST"),
+    conf.getString ("TOPOSOID_IN_MEMORY_DB_WEB_PORT"),
+    "setUserData",
+    transversalState)
+    updatedEndPoints
+
+  }
+
+
+
+  private def deduce(index:Int, targetJson:String, resultJson:String, endPoints:Seq[Endpoint], transversalState:TransversalState): (Int, String, String) ={
+
     val asosJson = execute(endPoints(index), targetJson, resultJson, transversalState)
     if(index == endPoints.size -1){
       (index, asosJson._1, asosJson._2)
     }else{
-      deduce(index + 1, asosJson._1, asosJson._2, transversalState)
+      deduce(index + 1, asosJson._1, asosJson._2, endPoints, transversalState)
     }
   }
 

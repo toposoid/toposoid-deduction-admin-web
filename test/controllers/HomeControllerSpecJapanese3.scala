@@ -61,6 +61,36 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
 
   val controller: HomeController = inject[HomeController]
 
+  def setEndPoints(indices: List[Int]): Unit = {
+    for (index <- 0 to 4) {
+      val endPointInfo = indices.contains(index) match {
+        case true => {
+          val host = conf.getString("TOPOSOID_DEDUCTION_UNIT%d_HOST".format(index + 1))
+          val port = conf.getString("TOPOSOID_DEDUCTION_UNIT%d_PORT".format(index + 1))
+          (host, port)
+        }
+        case _ => {
+          ("-", "-")
+        }
+      }
+      val json =
+        """{
+          |    "index": %d,
+          |    "function":{
+          |        "host": "%s",
+          |        "port": "%s"
+          |    }
+          |}""".stripMargin.format(index, endPointInfo._1, endPointInfo._2)
+
+      val fr1 = FakeRequest(POST, "/changeEndPoints")
+        .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalState)
+        .withJsonBody(Json.parse(json))
+
+      val result1 = call(controller.changeEndPoints(), fr1)
+      status(result1) mustBe OK
+    }
+  }
+
 
   "The specification1-japanese5(all)" should {
     "returns an appropriate response" in {
@@ -94,6 +124,8 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val sentenceId4 = getUUID()
       val knowledge4 = getKnowledge(lang = lang, sentence = sentenceD, reference = referenceD, imageBoxInfo = imageBoxInfoD)
       registSingleClaim(KnowledgeForParser(propositionId4, sentenceId4, knowledge4))
+
+      setEndPoints(List(0,1,2,3,4))
 
       val paraphraseA = "太郎は秀逸な提案をした。"
       val paraphraseB = "ペットが２匹います。"
