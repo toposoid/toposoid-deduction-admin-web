@@ -17,6 +17,8 @@ services:
       - TOPOSOID_DEDUCTION_UNIT3_PORT=9103
       - TOPOSOID_DEDUCTION_UNIT4_PORT=9104
       - TOPOSOID_DEDUCTION_UNIT5_PORT=9105
+      - TOPOSOID_IN_MEMORY_DB_WEB_HOST=data-accessor-redis-web
+      - TOPOSOID_IN_MEMORY_DB_WEB_PORT=9015
     ports:
       - 9003:9003
   toposoid-knowledge-register-web:

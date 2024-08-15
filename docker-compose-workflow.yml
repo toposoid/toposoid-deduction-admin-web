@@ -36,6 +36,8 @@ services:
       - TOPOSOID_COMMON_IMAGE_RECOGNITION_PORT=9013
       - TOPOSOID_CONTENTS_ADMIN_HOST=toposoid-contents-admin-web
       - TOPOSOID_CONTENTS_ADMIN_PORT=9012
+      - TOPOSOID_IN_MEMORY_DB_WEB_HOST=data-accessor-redis-web
+      - TOPOSOID_IN_MEMORY_DB_WEB_PORT=9015
     ports:
       - 9003:9003
 
