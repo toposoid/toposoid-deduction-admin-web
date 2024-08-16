@@ -60,7 +60,7 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
   override implicit def defaultAwaitTimeout: Timeout = 600.seconds
 
   val controller: HomeController = inject[HomeController]
-
+  /*
   def setEndPoints(indices: List[Int]): Unit = {
     for (index <- 0 to 4) {
       val endPointInfo = indices.contains(index) match {
@@ -91,6 +91,29 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val result1 = call(controller.changeEndPoints(), fr1)
       status(result1) mustBe OK
     }
+  }
+  */
+  def setEndPoints(indices: List[Int]): Unit = {
+    val endPoints: Seq[Endpoint] = List(0, 1, 2, 3, 4).foldLeft(Seq.empty[Endpoint]) {
+      (acc, x) => {
+        val endpoint = indices.contains(x) match {
+          case true => {
+            val host = conf.getString("TOPOSOID_DEDUCTION_UNIT%d_HOST".format(x + 1))
+            val port = conf.getString("TOPOSOID_DEDUCTION_UNIT%d_PORT".format(x + 1))
+            val name = conf.getString("TOPOSOID_DEDUCTION_UNIT%d_NAME".format(x + 1))
+            Endpoint(host, port, name)
+          }
+          case _ => Endpoint("-", "-", "-")
+        }
+        acc :+ endpoint
+      }
+    }
+    val fr1 = FakeRequest(POST, "/changeEndPoints")
+      .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalState)
+      .withJsonBody(Json.toJson(endPoints))
+
+    val result1 = call(controller.changeEndPoints(), fr1)
+    status(result1) mustBe OK
   }
 
   "The specification1-japanese5(all)" should {

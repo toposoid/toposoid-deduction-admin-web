@@ -98,6 +98,7 @@ class HomeControllerSpecJapanese0 extends PlaySpec with BeforeAndAfter with Befo
   "The deduction that there are no deduction-units." should {
     "returns an appropriate response" in {
 
+      /*
       for(index <- 0 to 4){
         val json =
           """{
@@ -118,6 +119,20 @@ class HomeControllerSpecJapanese0 extends PlaySpec with BeforeAndAfter with Befo
         contentType(result1) mustBe Some("application/json")
         assert(contentAsJson(result1).toString().equals("""{"status":"OK"}"""))
       }
+       */
+
+      val emptyEndPoints = Seq( Endpoint("-", "-", ""), Endpoint("-", "-", ""), Endpoint("-", "-", ""), Endpoint("-", "-", ""), Endpoint("-", "-", ""))
+
+
+      val fr1 = FakeRequest(POST, "/changeEndPoints")
+        .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalState)
+        .withJsonBody(Json.toJson(emptyEndPoints))
+
+      val result1 = call(controller.changeEndPoints(), fr1)
+      status(result1) mustBe OK
+      contentType(result1) mustBe Some("application/json")
+      assert(contentAsJson(result1).toString().equals("""{"status":"OK"}"""))
+
 
       val fr2 = FakeRequest(POST, "/getEndPoints")
         .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalState)

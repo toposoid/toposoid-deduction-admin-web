@@ -74,6 +74,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * Register and update microservices that perform deductive reasoning
    * @return
    */
+  /*
   def changeEndPoints()  = Action(parse.json) { request =>
     val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
     try{
@@ -83,6 +84,22 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + updatedEndPoints.toString(), transversalState.username))
       Ok("""{"status":"OK"}""").as(JSON)
     }catch {
+      case e: Exception => {
+        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
+        BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
+      }
+    }
+  }
+  */
+  def changeEndPoints() = Action(parse.json) { request =>
+    val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE.str).get).as[TransversalState]
+    try {
+      val json = request.body
+      val endPoints: Seq[Endpoint] = Json.parse(json.toString).as[Seq[Endpoint]]
+      val updatedEndPoints: Seq[Endpoint] = setEndPoints2(endPoints, transversalState)
+      logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + updatedEndPoints.toString(), transversalState.username))
+      Ok("""{"status":"OK"}""").as(JSON)
+    } catch {
       case e: Exception => {
         logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
         BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
@@ -142,11 +159,11 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       transversalState)
     val responseUserInfo: UserInfo = Json.parse(responseJson).as[UserInfo]
     responseUserInfo.value match {
-      case "" => setEndPoints(null, transversalState)
+      case "" => setEndPoints2(null, transversalState)
       case _ => Json.parse(responseUserInfo.value).as[Seq[Endpoint]]
     }
   }
-
+  /*
   private def setEndPoints(reqSelector:ReqSelector, transversalState:TransversalState):Seq[Endpoint] = {
 
     val updatedEndPoints:Seq[Endpoint] = Option(reqSelector) match {
@@ -165,9 +182,25 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     "setUserData",
     transversalState)
     updatedEndPoints
+  }
+  */
+  private def setEndPoints2(endPoints:Seq[Endpoint], transversalState: TransversalState): Seq[Endpoint] = {
+
+    val updatedEndPoints: Seq[Endpoint] = Option(endPoints) match {
+      case Some(x) => endPoints
+      case None => defaultEndPoints
+    }
+
+    val userInfo = UserInfo(user = transversalState.username, key = "DEDUCTION_UNIT_ENDPOINTS", value = Json.toJson(updatedEndPoints).toString())
+    val responseJson = ToposoidUtils.callComponent(
+      Json.toJson(userInfo).toString(),
+      conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_HOST"),
+      conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_PORT"),
+      "setUserData",
+      transversalState)
+    updatedEndPoints
 
   }
-
 
 
   private def deduce(index:Int, targetJson:String, resultJson:String, endPoints:Seq[Endpoint], transversalState:TransversalState): (Int, String, String) ={
