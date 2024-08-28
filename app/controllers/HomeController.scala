@@ -31,7 +31,7 @@ import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.toposoid.common.{CLAIM, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.deduction.common.FacadeForAccessNeo4J.getCypherQueryResult
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
-import com.ideal.linked.toposoid.protocol.model.redis.UserInfo
+import com.ideal.linked.toposoid.protocol.model.redis.KeyValueStoreInfo
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.{Failure, Success}
@@ -74,34 +74,17 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * Register and update microservices that perform deductive reasoning
    * @return
    */
-  /*
-  def changeEndPoints()  = Action(parse.json) { request =>
-    val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
-    try{
-      val json = request.body
-      val reqSelector: ReqSelector = Json.parse(json.toString).as[ReqSelector]
-      val updatedEndPoints:Seq[Endpoint] = setEndPoints(reqSelector, transversalState)
-      logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + updatedEndPoints.toString(), transversalState.username))
-      Ok("""{"status":"OK"}""").as(JSON)
-    }catch {
-      case e: Exception => {
-        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
-        BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
-      }
-    }
-  }
-  */
   def changeEndPoints() = Action(parse.json) { request =>
     val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE.str).get).as[TransversalState]
     try {
       val json = request.body
       val endPoints: Seq[Endpoint] = Json.parse(json.toString).as[Seq[Endpoint]]
-      val updatedEndPoints: Seq[Endpoint] = setEndPoints2(endPoints, transversalState)
-      logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + updatedEndPoints.toString(), transversalState.username))
+      val updatedEndPoints: Seq[Endpoint] = setEndPoints(endPoints, transversalState)
+      logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + updatedEndPoints.toString(), transversalState.userId))
       Ok("""{"status":"OK"}""").as(JSON)
     } catch {
       case e: Exception => {
-        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
+        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.userId), e)
         BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
       }
     }
@@ -113,7 +96,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       Ok(Json.toJson(getEndPointsFromInMemoryDB(transversalState))).as(JSON)
     } catch {
       case e: Exception => {
-        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
+        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.userId), e)
         BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
       }
     }
@@ -137,12 +120,12 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       val jsonStr:String = getCypherQueryResult("MATCH (n) RETURN n limit 1;", "", transversalState)
       if(jsonStr.equals("""{"records":[]}""")) Ok(json.toString()).as(JSON)
       val result = deduce(0, json.toString(), json.toString(), currentEndPoints, transversalState)
-      logger.info(ToposoidUtils.formatMessageForLogger("All deduction units have been completed.", transversalState.username))
+      logger.info(ToposoidUtils.formatMessageForLogger("All deduction units have been completed.", transversalState.userId))
       Ok(result._3).as(JSON)
 
     }catch {
       case e: Exception => {
-        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
+        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.userId), e)
         BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
       }
     }
@@ -150,53 +133,33 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
 
 
   private def getEndPointsFromInMemoryDB(transversalState:TransversalState):Seq[Endpoint] = {
-    val userInfo = UserInfo(user = transversalState.username, key = "DEDUCTION_UNIT_ENDPOINTS", value = "")
+    val userInfo = KeyValueStoreInfo(identifier = transversalState.userId, key = "DEDUCTION_UNIT_ENDPOINTS", value = "")
     val responseJson = ToposoidUtils.callComponent(
       Json.toJson(userInfo).toString(),
       conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_HOST"),
       conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_PORT"),
-      "getUserData",
+      "getData",
       transversalState)
-    val responseUserInfo: UserInfo = Json.parse(responseJson).as[UserInfo]
+    val responseUserInfo: KeyValueStoreInfo = Json.parse(responseJson).as[KeyValueStoreInfo]
     responseUserInfo.value match {
-      case "" => setEndPoints2(null, transversalState)
+      case "" => setEndPoints(null, transversalState)
       case _ => Json.parse(responseUserInfo.value).as[Seq[Endpoint]]
     }
   }
-  /*
-  private def setEndPoints(reqSelector:ReqSelector, transversalState:TransversalState):Seq[Endpoint] = {
 
-    val updatedEndPoints:Seq[Endpoint] = Option(reqSelector) match {
-      case Some(x) => {
-        val currentEndPoints = getEndPointsFromInMemoryDB(transversalState)
-        currentEndPoints.updated(reqSelector.index, reqSelector.function)
-      }
-      case None => defaultEndPoints
-    }
-
-    val userInfo = UserInfo (user = transversalState.username, key = "DEDUCTION_UNIT_ENDPOINTS", value = Json.toJson(updatedEndPoints).toString())
-    val responseJson = ToposoidUtils.callComponent (
-    Json.toJson (userInfo).toString (),
-    conf.getString ("TOPOSOID_IN_MEMORY_DB_WEB_HOST"),
-    conf.getString ("TOPOSOID_IN_MEMORY_DB_WEB_PORT"),
-    "setUserData",
-    transversalState)
-    updatedEndPoints
-  }
-  */
-  private def setEndPoints2(endPoints:Seq[Endpoint], transversalState: TransversalState): Seq[Endpoint] = {
+  private def setEndPoints(endPoints:Seq[Endpoint], transversalState: TransversalState): Seq[Endpoint] = {
 
     val updatedEndPoints: Seq[Endpoint] = Option(endPoints) match {
       case Some(x) => endPoints
       case None => defaultEndPoints
     }
 
-    val userInfo = UserInfo(user = transversalState.username, key = "DEDUCTION_UNIT_ENDPOINTS", value = Json.toJson(updatedEndPoints).toString())
+    val userInfo = KeyValueStoreInfo(identifier = transversalState.userId, key = "DEDUCTION_UNIT_ENDPOINTS", value = Json.toJson(updatedEndPoints).toString())
     val responseJson = ToposoidUtils.callComponent(
       Json.toJson(userInfo).toString(),
       conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_HOST"),
       conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_PORT"),
-      "setUserData",
+      "setData",
       transversalState)
     updatedEndPoints
 
@@ -250,7 +213,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
         case Success(js) =>
           logger.debug(js.toString())
         case Failure(e) =>
-          logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.username), e)
+          logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.userId), e)
       }
       while(!result.isCompleted){
         Thread.sleep(20)
