@@ -18,7 +18,6 @@ package controllers
 
 import akka.util.Timeout
 import com.ideal.linked.common.DeploymentConverter.conf
-import com.ideal.linked.data.accessor.neo4j.Neo4JAccessor
 import com.ideal.linked.toposoid.common.{CLAIM, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, PropositionRelation, Reference}
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
@@ -45,16 +44,16 @@ class HomeControllerSpecJapanese0 extends PlaySpec with BeforeAndAfter with Befo
   before {
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
-    Neo4JAccessor.delete()
+    TestUtils.deleteNeo4JAllData(transversalState)
     Thread.sleep(1000)
   }
 
   override def beforeAll(): Unit = {
-    Neo4JAccessor.delete()
+    TestUtils.deleteNeo4JAllData(transversalState)
   }
 
   override def afterAll(): Unit = {
-    Neo4JAccessor.delete()
+    TestUtils.deleteNeo4JAllData(transversalState)
   }
 
   def registSingleClaim(knowledgeForParser:KnowledgeForParser): Unit = {
