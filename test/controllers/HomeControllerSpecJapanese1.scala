@@ -22,7 +22,7 @@ import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.toposoid.common.{CLAIM, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.protocol.model.parser.{InputSentenceForParser, KnowledgeForParser}
-import controllers.TestUtils.{addImageInfoToLocalNode, getImageInfo, getKnowledge, getUUID, registSingleClaim}
+import controllers.TestUtilsEx.{addImageInfoToLocalNode, getImageInfo, getKnowledge, getUUID, registerSingleClaim}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -30,7 +30,7 @@ import play.api.Play.materializer
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 import play.api.test.Helpers.{POST, contentAsString, contentType, defaultAwaitTimeout, status, _}
-import play.api.test.{FakeRequest, _}
+import play.api.test._
 import io.jvm.uuid.UUID
 
 import scala.concurrent.duration.DurationInt
@@ -43,16 +43,16 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
   before {
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
-    TestUtils.deleteNeo4JAllData(transversalState)
+    TestUtilsEx.deleteNeo4JAllData(transversalState)
     Thread.sleep(1000)
   }
 
   override def beforeAll(): Unit = {
-    TestUtils.deleteNeo4JAllData(transversalState)
+    TestUtilsEx.deleteNeo4JAllData(transversalState)
   }
 
   override def afterAll(): Unit = {
-    TestUtils.deleteNeo4JAllData(transversalState)
+    TestUtilsEx.deleteNeo4JAllData(transversalState)
   }
   val lang = "ja_JP"
   /*
@@ -123,7 +123,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       val sentenceId1 = UUID.random.toString
       val knowledge1 = Knowledge(sentenceA, "ja_JP", "{}", false)
       val paraphrase1 = Knowledge(paraphraseA,"ja_JP", "{}", false)
-      registSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
+      registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
       setEndPoints(List(0,1))
 
       val propositionIdForInference = UUID.random.toString
@@ -165,7 +165,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
 
       val knowledge1 = Knowledge(sentenceA, "ja_JP", "{}", false)
       val paraphrase1 = Knowledge(paraphraseA,"ja_JP", "{}", false)
-      registSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
+      registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
       setEndPoints(List(0,1))
 
       val propositionIdForInference = UUID.random.toString
@@ -216,7 +216,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       //val knowledge1 = Knowledge(sentenceA,"ja_JP", "{}", false, List(imageA))
       val knowledge1 = getKnowledge(lang = lang, sentence = sentenceA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
       val paraphrase1 = getKnowledge(lang = lang, sentence = paraphraseA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
-      registSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
+      registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
       setEndPoints(List(0,1,3))
 
       val propositionIdForInference = getUUID()

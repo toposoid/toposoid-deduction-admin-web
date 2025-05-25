@@ -22,7 +22,7 @@ import com.ideal.linked.toposoid.common.{CLAIM, TRANSVERSAL_STATE, ToposoidUtils
 import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, KnowledgeForImage, Reference}
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
 import com.ideal.linked.toposoid.protocol.model.parser.{InputSentenceForParser, KnowledgeForParser}
-import controllers.TestUtils._
+import controllers.TestUtilsEx.{addImageInfoToLocalNode, addImageInfoToSemiGlobalNode, getKnowledge, getUUID, registerSingleClaim}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -42,19 +42,19 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
   before {
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
-    TestUtils.deleteNeo4JAllData(transversalState)
+    TestUtilsEx.deleteNeo4JAllData(transversalState)
     Thread.sleep(1000)
   }
   after {
-    TestUtils.deleteNeo4JAllData(transversalState)
+    TestUtilsEx.deleteNeo4JAllData(transversalState)
   }
 
   override def beforeAll(): Unit = {
-    TestUtils.deleteNeo4JAllData(transversalState)
+    TestUtilsEx.deleteNeo4JAllData(transversalState)
   }
 
   override def afterAll(): Unit = {
-    TestUtils.deleteNeo4JAllData(transversalState)
+    TestUtilsEx.deleteNeo4JAllData(transversalState)
   }
   val lang = "ja_JP"
 
@@ -133,22 +133,22 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val propositionId1 = getUUID()
       val sentenceId1 = getUUID()
       val knowledge1 = Knowledge(sentenceA, lang, "{}", false)
-      registSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
+      registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
 
       val propositionId2 = getUUID()
       val sentenceId2 = getUUID()
       val knowledge2 = getKnowledge(lang = lang, sentence = sentenceB, reference = referenceB, imageBoxInfo = imageBoxInfoB, transversalState)
-      registSingleClaim(KnowledgeForParser(propositionId2, sentenceId2, knowledge2), transversalState)
+      registerSingleClaim(KnowledgeForParser(propositionId2, sentenceId2, knowledge2), transversalState)
 
       val propositionId3 = getUUID()
       val sentenceId3 = getUUID()
       val knowledge3 = Knowledge(sentenceC, lang, "{}", false)
-      registSingleClaim(KnowledgeForParser(propositionId3, sentenceId3, knowledge3), transversalState)
+      registerSingleClaim(KnowledgeForParser(propositionId3, sentenceId3, knowledge3), transversalState)
 
       val propositionId4 = getUUID()
       val sentenceId4 = getUUID()
       val knowledge4 = getKnowledge(lang = lang, sentence = sentenceD, reference = referenceD, imageBoxInfo = imageBoxInfoD, transversalState)
-      registSingleClaim(KnowledgeForParser(propositionId4, sentenceId4, knowledge4), transversalState)
+      registerSingleClaim(KnowledgeForParser(propositionId4, sentenceId4, knowledge4), transversalState)
 
       setEndPoints(List(0,1,2,3,4))
 
