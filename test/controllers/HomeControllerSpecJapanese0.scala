@@ -21,6 +21,7 @@ import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.toposoid.common.{CLAIM, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, PropositionRelation, Reference}
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
+import com.ideal.linked.toposoid.protocol.model.frontend.Endpoint
 import com.ideal.linked.toposoid.protocol.model.parser.{InputSentenceForParser, KnowledgeForParser, KnowledgeSentenceSetForParser}
 import io.jvm.uuid.UUID
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
@@ -121,18 +122,6 @@ class HomeControllerSpecJapanese0 extends PlaySpec with BeforeAndAfter with Befo
       contentType(result1) mustBe Some("application/json")
       assert(contentAsJson(result1).toString().equals("""{"status":"OK"}"""))
 
-
-      val fr2 = FakeRequest(POST, "/getEndPoints")
-        .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
-        .withJsonBody(Json.parse("{}"))
-
-      val result2 = call(controller.getEndPoints(), fr2)
-      status(result2) mustBe OK
-      contentType(result2) mustBe Some("application/json")
-
-      val jsonResult = contentAsJson(result2).toString()
-      val endPoints = Json.parse(jsonResult).as[Seq[Endpoint]]
-      assert(endPoints.filter(x => x.host.equals("-") && x.port.equals("-")).size == 5)
 
       val sentenceA = "太郎は秀逸な発案をした。"
       val sentence1 = Knowledge(sentenceA, "ja_JP", "{}", false)

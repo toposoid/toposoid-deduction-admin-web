@@ -28,25 +28,15 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl._
 import akka.stream.ActorMaterializer
 import com.ideal.linked.common.DeploymentConverter.conf
-import com.ideal.linked.toposoid.common.{CLAIM, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
+import com.ideal.linked.toposoid.common.InMemoryDbUtils.setEndPoints
+import com.ideal.linked.toposoid.common.{CLAIM, InMemoryDbUtils, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.deduction.common.FacadeForAccessNeo4J.getCypherQueryResult
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
+import com.ideal.linked.toposoid.protocol.model.frontend.Endpoint
 import com.ideal.linked.toposoid.protocol.model.redis.KeyValueStoreInfo
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.{Failure, Success}
-
-case class Endpoint(host:String, port:String, name:String)
-object Endpoint {
-  implicit val jsonWrites = Json.writes[Endpoint]
-  implicit val jsonReads = Json.reads[Endpoint]
-}
-
-case class ReqSelector(index:Int, function:Endpoint)
-object ReqSelector {
-  implicit val jsonWrites = Json.writes[ReqSelector]
-  implicit val jsonReads = Json.reads[ReqSelector]
-}
 
 
 /**
@@ -60,49 +50,6 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
   final val NO_PORT = "-"
   final val NO_NAME = "-"
 
-  private val defaultEndPoints:Seq[Endpoint] = Seq(
-    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT1_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT1_PORT"), name = conf.getString("TOPOSOID_DEDUCTION_UNIT1_NAME")),
-    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT2_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT2_PORT"), name = conf.getString("TOPOSOID_DEDUCTION_UNIT2_NAME")),
-    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT3_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT3_PORT"), name = conf.getString("TOPOSOID_DEDUCTION_UNIT3_NAME")),
-    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT4_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT4_PORT"), name = conf.getString("TOPOSOID_DEDUCTION_UNIT4_NAME")),
-    Endpoint(conf.getString("TOPOSOID_DEDUCTION_UNIT5_HOST"), port = conf.getString("TOPOSOID_DEDUCTION_UNIT5_PORT"), name = conf.getString("TOPOSOID_DEDUCTION_UNIT5_NAME")))
-  //private var endPoints:Seq[Endpoint] = defaultEndPoints
-  //private var targetJson:String = ""
-
-  /**
-   * This function receives the URL information of the microservice as JSON and
-   * Register and update microservices that perform deductive reasoning
-   * @return
-   */
-  def changeEndPoints() = Action(parse.json) { request =>
-    val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE.str).get).as[TransversalState]
-    try {
-      val json = request.body
-      val endPoints: Seq[Endpoint] = Json.parse(json.toString).as[Seq[Endpoint]]
-      val updatedEndPoints: Seq[Endpoint] = setEndPoints(endPoints, transversalState)
-      logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + updatedEndPoints.toString(), transversalState.userId))
-      Ok("""{"status":"OK"}""").as(JSON)
-    } catch {
-      case e: Exception => {
-        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.userId), e)
-        BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
-      }
-    }
-  }
-
-  def getEndPoints() = Action(parse.json) { request =>
-    val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
-    try {
-      Ok(Json.toJson(getEndPointsFromInMemoryDB(transversalState))).as(JSON)
-    } catch {
-      case e: Exception => {
-        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.userId), e)
-        BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
-      }
-    }
-  }
-
-
   /**
    * This function receives the predicate argument structure analysis result of a Japanese sentence as JSON,
    * delegates the processing to the registered microservices that perform deductive inference, and returns the result in JSON.
@@ -114,7 +61,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       val json = request.body
 
       //TODO: REDISから情報を取得
-      val currentEndPoints = getEndPointsFromInMemoryDB(transversalState)
+      val currentEndPoints = InMemoryDbUtils.getEndPoints(transversalState)
 
       logger.info(currentEndPoints.toString())
       val jsonStr:String = getCypherQueryResult("MATCH (n) RETURN n limit 1;", "", transversalState)
@@ -131,38 +78,26 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     }
   }
 
-
-  private def getEndPointsFromInMemoryDB(transversalState:TransversalState):Seq[Endpoint] = {
-    val userInfo = KeyValueStoreInfo(identifier = transversalState.userId, key = "DEDUCTION_UNIT_ENDPOINTS", value = "")
-    val responseJson = ToposoidUtils.callComponent(
-      Json.toJson(userInfo).toString(),
-      conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_HOST"),
-      conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_PORT"),
-      "getData",
-      transversalState)
-    val responseUserInfo: KeyValueStoreInfo = Json.parse(responseJson).as[KeyValueStoreInfo]
-    responseUserInfo.value match {
-      case "" => setEndPoints(null, transversalState)
-      case _ => Json.parse(responseUserInfo.value).as[Seq[Endpoint]]
+  /**
+   * This function receives the URL information of the microservice as JSON and
+   * Register and update microservices that perform deductive reasoning
+   *
+   * @return
+   */
+  def changeEndPoints() = Action(parse.json) { request =>
+    val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE.str).get).as[TransversalState]
+    try {
+      val json = request.body
+      val endPoints: Seq[Endpoint] = Json.parse(json.toString).as[Seq[Endpoint]]
+      val updatedEndPoints: Seq[Endpoint] = setEndPoints(endPoints, transversalState)
+      logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + updatedEndPoints.toString(), transversalState.userId))
+      Ok("""{"status":"OK"}""").as(JSON)
+    } catch {
+      case e: Exception => {
+        logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.userId), e)
+        BadRequest(Json.obj("status" -> "Error", "message" -> e.toString()))
+      }
     }
-  }
-
-  private def setEndPoints(endPoints:Seq[Endpoint], transversalState: TransversalState): Seq[Endpoint] = {
-
-    val updatedEndPoints: Seq[Endpoint] = Option(endPoints) match {
-      case Some(x) => endPoints
-      case None => defaultEndPoints
-    }
-
-    val userInfo = KeyValueStoreInfo(identifier = transversalState.userId, key = "DEDUCTION_UNIT_ENDPOINTS", value = Json.toJson(updatedEndPoints).toString())
-    val responseJson = ToposoidUtils.callComponent(
-      Json.toJson(userInfo).toString(),
-      conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_HOST"),
-      conf.getString("TOPOSOID_IN_MEMORY_DB_WEB_PORT"),
-      "setData",
-      transversalState)
-    updatedEndPoints
-
   }
 
 
