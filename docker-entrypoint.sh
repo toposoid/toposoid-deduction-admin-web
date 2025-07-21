@@ -18,4 +18,4 @@ fi
 
 export _JAVA_OPTIONS=$_JAVA_OPTIONS
 cd /app/toposoid-deduction-admin-web/target/universal
-toposoid-deduction-admin-web-0.6-SNAPSHOT/bin/toposoid-deduction-admin-web
+toposoid-deduction-admin-web-0.6/bin/toposoid-deduction-admin-web
