@@ -4,8 +4,5 @@
 # ~~~~
 
 # An example controller showing a sample home page
-+ nocsrf
-POST    /changeEndPoints            controllers.HomeController.changeEndPoints()
-+ nocsrf
-POST    /getEndPoints               controllers.HomeController.getEndPoints()
 POST    /executeDeduction           controllers.HomeController.executeDeduction()
+POST    /changeEndPoints            controllers.HomeController.changeEndPoints()
