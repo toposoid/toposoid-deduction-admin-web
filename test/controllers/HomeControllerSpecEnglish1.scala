@@ -17,7 +17,7 @@
 
 package controllers
 
-import akka.util.Timeout
+import org.apache.pekko.util.Timeout
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.toposoid.common.{CLAIM, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, Reference}
@@ -33,7 +33,7 @@ import play.api.http.Status.OK
 import play.api.libs.json.Json
 import play.api.test.Helpers.{POST, contentType, defaultAwaitTimeout, status, _}
 import play.api.test._
-import io.jvm.uuid.UUID
+//import io.jvm.uuid.UUID
 
 import scala.concurrent.duration.DurationInt
 
@@ -122,16 +122,16 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
     "returns an appropriate response" in {
       val sentenceA = "Life is so comfortable."
       val paraphraseA = "Life is so comfortable."
-      val propositionId1 = UUID.random.toString
-      val sentenceId1 = UUID.random.toString
+      val propositionId1 = java.util.UUID.randomUUID().toString
+      val sentenceId1 = java.util.UUID.randomUUID().toString
       val knowledge1 = Knowledge(sentenceA, "en_US", "{}", false)
       val paraphrase1 = Knowledge(paraphraseA,"en_US", "{}", false)
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
       setEndPoints(List(0,1))
 
-      val propositionIdForInference = UUID.random.toString
+      val propositionIdForInference = java.util.UUID.randomUUID().toString
       val premiseKnowledge = List.empty[KnowledgeForParser]
-      val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, UUID.random.toString, paraphrase1))
+      val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, java.util.UUID.randomUUID().toString, paraphrase1))
       val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
 
       //val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("Living is so comfortable.","en_US", "{}", false)))).toString()
@@ -164,17 +164,17 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
     "returns an appropriate response" in {
       val sentenceA = "Life is so comfortable."
       val paraphraseA = "Living is so comfortable."
-      val propositionId1 = UUID.random.toString
-      val sentenceId1 = UUID.random.toString
+      val propositionId1 = java.util.UUID.randomUUID().toString
+      val sentenceId1 = java.util.UUID.randomUUID().toString
 
       val knowledge1 = Knowledge(sentenceA, "en_US", "{}", false)
       val paraphrase1 = Knowledge(paraphraseA,"en_US", "{}", false)
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
       setEndPoints(List(0,1))
 
-      val propositionIdForInference = UUID.random.toString
+      val propositionIdForInference = java.util.UUID.randomUUID().toString
       val premiseKnowledge = List.empty[KnowledgeForParser]
-      val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, UUID.random.toString, paraphrase1))
+      val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, java.util.UUID.randomUUID().toString, paraphrase1))
       val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
 
       //val inputSentence = Json.toJson(InputSentence(List.empty[Knowledge], List(Knowledge("Living is so comfortable.","en_US", "{}", false)))).toString()

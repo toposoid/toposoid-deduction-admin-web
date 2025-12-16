@@ -28,7 +28,7 @@ import com.ideal.linked.toposoid.protocol.model.neo4j.Neo4jRecords
 import com.ideal.linked.toposoid.protocol.model.parser.{KnowledgeForParser, KnowledgeSentenceSetForParser}
 import com.ideal.linked.toposoid.test.utils.TestUtils
 import play.api.libs.json.Json
-import io.jvm.uuid.UUID
+//import io.jvm.uuid.UUID
 
 case class ImageBoxInfo(x:Int, y:Int, weight:Int, height:Int)
 
@@ -59,9 +59,9 @@ object TestUtilsEx {
 
 
   def getUUID(): String = {
-    var uuid: String = UUID.random.toString
+    var uuid: String = java.util.UUID.randomUUID().toString
     while (usedUuidList.filter(_.equals(uuid)).size > 0) {
-      uuid = UUID.random.toString
+      uuid = java.util.UUID.randomUUID().toString
     }
     usedUuidList = usedUuidList :+ uuid
     uuid

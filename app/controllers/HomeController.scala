@@ -21,13 +21,13 @@ import javax.inject._
 import play.api._
 import play.api.mvc._
 import play.api.libs.json.Json
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
-import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.scaladsl._
-import akka.stream.ActorMaterializer
+//import akka.actor.ActorSystem
+//import akka.http.scaladsl.Http
+//import akka.http.scaladsl.model.headers.RawHeader
+//import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
+//import akka.http.scaladsl.unmarshalling.Unmarshal
+//import akka.stream.scaladsl._
+//import akka.stream.ActorMaterializer
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.toposoid.common.InMemoryDbUtils.setEndPoints
 import com.ideal.linked.toposoid.common.{CLAIM, InMemoryDbUtils, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
@@ -36,6 +36,7 @@ import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, An
 import com.ideal.linked.toposoid.protocol.model.frontend.Endpoint
 import com.ideal.linked.toposoid.protocol.model.redis.KeyValueStoreInfo
 import com.typesafe.scalalogging.LazyLogging
+import play.api.libs.json.JsValue
 
 import scala.util.{Failure, Success}
 
@@ -56,7 +57,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * delegates the processing to the registered microservices that perform deductive inference, and returns the result in JSON.
    * @return
    */
-  def executeDeduction()  = Action(parse.json) { request =>
+  def executeDeduction():Action[JsValue] = Action(parse.json[JsValue]) { request =>
     val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
     try {
       val json = request.body
@@ -85,7 +86,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    *
    * @return
    */
-  def changeEndPoints() = Action(parse.json) { request =>
+  def changeEndPoints():Action[JsValue] = Action(parse.json[JsValue]) { request =>
     val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE.str).get).as[TransversalState]
     try {
       val json = request.body
@@ -121,10 +122,11 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
   private def execute(endpoint:Endpoint, targetJson:String, resultJson:String, transversalState:TransversalState): (String, String) ={
 
     if(endpoint.host.equals(NO_HOST) || endpoint.port.equals(NO_PORT) || endpoint.name.equals(NO_NAME)) return (targetJson, resultJson)
+    /*
     implicit val system = ActorSystem()
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
-
+    */
     val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson).as[AnalyzedSentenceObjects]
     val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == PREMISE.index).size > 0
     //If the proposition has premise, the truth of the claim is determined along with the truth of havePremiseInGivenProposition.
@@ -136,6 +138,16 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
 
     if(notFinished.size > 0) {
       val targets:List[AnalyzedSentenceObject] = notFinished
+
+      val result = ToposoidUtils.callComponent(
+            Json.toJson(AnalyzedSentenceObjects(targets)).toString(),
+            endpoint.host,
+            endpoint.port,
+            "execute",
+            transversalState)
+
+
+      /*
       val entity = HttpEntity(ContentTypes.`application/json`, Json.toJson(AnalyzedSentenceObjects(targets)).toString())
       val req = HttpRequest(uri = "http://" + endpoint.host + ":" + endpoint.port + "/execute", method = HttpMethods.POST, entity = entity)
                   .withHeaders(RawHeader(TRANSVERSAL_STATE.str, Json.toJson(transversalState).toString()))
@@ -154,7 +166,8 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       while(!result.isCompleted){
         Thread.sleep(20)
       }
-      getResultJson(result.value.get.get.toString(), resultJson)
+      */
+      getResultJson(result, resultJson)
     }else{
       getResultJson(targetJson, resultJson)
     }
