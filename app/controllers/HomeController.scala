@@ -30,7 +30,7 @@ import play.api.libs.json.Json
 //import akka.stream.ActorMaterializer
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.toposoid.common.InMemoryDbUtils.setEndPoints
-import com.ideal.linked.toposoid.common.{CLAIM, InMemoryDbUtils, PREMISE, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
+import com.ideal.linked.toposoid.common.{SentenceType, InMemoryDbUtils, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.deduction.common.FacadeForAccessNeo4J.getCypherQueryResult
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
 import com.ideal.linked.toposoid.protocol.model.frontend.Endpoint
@@ -128,11 +128,11 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     implicit val executionContext = system.dispatcher
     */
     val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson).as[AnalyzedSentenceObjects]
-    val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == PREMISE.index).size > 0
+    val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.PREMISE.index).size > 0
     //If the proposition has premise, the truth of the claim is determined along with the truth of havePremiseInGivenProposition.
     val checkTargets = hasPremise match  {
-      case true => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index && x.deductionResult.havePremiseInGivenProposition)
-      case _ => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == CLAIM.index)
+      case true => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.CLAIM.index && x.deductionResult.havePremiseInGivenProposition)
+      case _ => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.CLAIM.index)
     }
     val notFinished = checkTargets.filterNot(x => x.deductionResult.status)
 
