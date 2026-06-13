@@ -21,17 +21,9 @@ import javax.inject._
 import play.api._
 import play.api.mvc._
 import play.api.libs.json.Json
-//import akka.actor.ActorSystem
-//import akka.http.scaladsl.Http
-//import akka.http.scaladsl.model.headers.RawHeader
-//import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
-//import akka.http.scaladsl.unmarshalling.Unmarshal
-//import akka.stream.scaladsl._
-//import akka.stream.ActorMaterializer
 import com.ideal.linked.common.DeploymentConverter.conf
 import com.ideal.linked.toposoid.common.InMemoryDbUtils.setEndPoints
 import com.ideal.linked.toposoid.common.{SentenceType, InMemoryDbUtils, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
-import com.ideal.linked.toposoid.deduction.common.FacadeForAccessNeo4J.getCypherQueryResult
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
 import com.ideal.linked.toposoid.protocol.model.frontend.Endpoint
 import com.ideal.linked.toposoid.protocol.model.redis.KeyValueStoreInfo
@@ -39,6 +31,8 @@ import com.typesafe.scalalogging.LazyLogging
 import play.api.libs.json.JsValue
 
 import scala.util.{Failure, Success}
+import com.ideal.linked.toposoid.common.Neo4JUtilsImpl
+import com.ideal.linked.toposoid.protocol.model.base.DeductionConfiguration
 
 
 /**
@@ -61,12 +55,11 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     val transversalState = Json.parse(request.headers.get(TRANSVERSAL_STATE .str).get).as[TransversalState]
     try {
       val json = request.body
-
-      //TODO: REDISから情報を取得
-      val currentEndPoints = InMemoryDbUtils.getEndPoints(transversalState)
+      val currentEndPoints = InMemoryDbUtils.getDeductionGroupEndPoints(transversalState)
+      //TODO:
 
       logger.info(currentEndPoints.toString())
-      val jsonStr:String = getCypherQueryResult("MATCH (n) RETURN n limit 1;", "", transversalState)
+      val jsonStr:String = Neo4JUtilsImpl().getCypherQueryResult("MATCH (n) RETURN n limit 1;", "", transversalState)
       if(jsonStr.equals("""{"records":[]}""")) Ok(json.toString()).as(JSON)
       val result = deduce(0, json.toString(), json.toString(), currentEndPoints, transversalState)
       logger.info(ToposoidUtils.formatMessageForLogger("All deduction units have been completed.", transversalState.userId))
@@ -91,7 +84,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     try {
       val json = request.body
       val endPoints: Seq[Endpoint] = Json.parse(json.toString).as[Seq[Endpoint]]
-      val updatedEndPoints: Seq[Endpoint] = setEndPoints(endPoints, transversalState)
+      val updatedEndPoints: Seq[Endpoint] = InMemoryDbUtils.setDeductionGroupEndPoints(endPoints, transversalState)
       logger.info(ToposoidUtils.formatMessageForLogger("Changing End-Points completed." + updatedEndPoints.toString(), transversalState.userId))
       Ok("""{"status":"OK"}""").as(JSON)
     } catch {
@@ -128,6 +121,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     implicit val executionContext = system.dispatcher
     */
     val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson).as[AnalyzedSentenceObjects]
+    val deducitonConfig = analyzedSentenceObjects.deductionConfiguration
     val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.PREMISE.index).size > 0
     //If the proposition has premise, the truth of the claim is determined along with the truth of havePremiseInGivenProposition.
     val checkTargets = hasPremise match  {
@@ -137,43 +131,21 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     val notFinished = checkTargets.filterNot(x => x.deductionResult.status)
 
     if(notFinished.size > 0) {
-      val targets:List[AnalyzedSentenceObject] = notFinished
-
+      val targets:List[AnalyzedSentenceObject] = notFinished      
       val result = ToposoidUtils.callComponent(
-            Json.toJson(AnalyzedSentenceObjects(targets)).toString(),
+            Json.toJson(AnalyzedSentenceObjects(targets, deducitonConfig)).toString(),
             endpoint.host,
             endpoint.port,
             "execute",
             transversalState)
 
-
-      /*
-      val entity = HttpEntity(ContentTypes.`application/json`, Json.toJson(AnalyzedSentenceObjects(targets)).toString())
-      val req = HttpRequest(uri = "http://" + endpoint.host + ":" + endpoint.port + "/execute", method = HttpMethods.POST, entity = entity)
-                  .withHeaders(RawHeader(TRANSVERSAL_STATE.str, Json.toJson(transversalState).toString()))
-      val result = Http().singleRequest(req)
-        .flatMap { res =>
-          Unmarshal(res).to[String].map { data =>
-            Json.parse(data.getBytes("UTF-8"))
-          }
-        }
-      result.onComplete {
-        case Success(js) =>
-          logger.debug(js.toString())
-        case Failure(e) =>
-          logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.userId), e)
-      }
-      while(!result.isCompleted){
-        Thread.sleep(20)
-      }
-      */
-      getResultJson(result, resultJson)
+      getResultJson(result, resultJson, deducitonConfig)
     }else{
-      getResultJson(targetJson, resultJson)
+      getResultJson(targetJson, resultJson, deducitonConfig)
     }
   }
 
-  private def getResultJson(targetJson:String, resultJson:String):(String,String) ={
+  private def getResultJson(targetJson:String, resultJson:String, deducitonConfig:DeductionConfiguration):(String,String) ={
     val targetAsos = Json.parse(targetJson).as[AnalyzedSentenceObjects].analyzedSentenceObjects
     val resultAsos = Json.parse(resultJson).as[AnalyzedSentenceObjects].analyzedSentenceObjects
 
@@ -187,7 +159,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
         acc :+ aso
       }
     }
-    val updateResultJson = Json.toJson(AnalyzedSentenceObjects(asos)).toString()
+    val updateResultJson = Json.toJson(AnalyzedSentenceObjects(asos, deducitonConfig)).toString()
     (targetJson, updateResultJson)
   }
 }
