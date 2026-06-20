@@ -156,7 +156,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       val actualEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.edgeList.size}
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(actualEdgeSize <= coveredKnowledgeSize)
+      assert(coveredKnowledgeSize == 2)
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
@@ -173,7 +173,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       val knowledge1 = Knowledge(sentenceA, "ja_JP", "{}", false)
       val paraphrase1 = Knowledge(paraphraseA,"ja_JP", "{}", false)
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
-      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_PHRASE_BASE, transversalState)
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
       TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
 
 
@@ -201,7 +201,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(actualEdgeSize <= coveredKnowledgeSize)
+      assert(coveredKnowledgeSize == 1)
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x =>  x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("synonym-match")).size == 1).size == 1)
@@ -227,7 +227,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       val knowledge1 = getKnowledge(lang = lang, sentence = sentenceA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
       val paraphrase1 = getKnowledge(lang = lang, sentence = paraphraseA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
-      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_PHRASE_BASE, transversalState)
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
       TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
 
       val propositionIdForInference = getUUID()
@@ -255,7 +255,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(actualEdgeSize <= coveredKnowledgeSize)
+      assert(coveredKnowledgeSize == 2)
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size == 1).size == 1)
