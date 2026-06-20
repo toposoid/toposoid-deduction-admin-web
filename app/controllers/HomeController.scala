@@ -22,7 +22,6 @@ import play.api._
 import play.api.mvc._
 import play.api.libs.json.Json
 import com.ideal.linked.common.DeploymentConverter.conf
-import com.ideal.linked.toposoid.common.InMemoryDbUtils.setEndPoints
 import com.ideal.linked.toposoid.common.{SentenceType, InMemoryDbUtils, TRANSVERSAL_STATE, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
 import com.ideal.linked.toposoid.protocol.model.frontend.Endpoint
@@ -60,11 +59,17 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
 
       logger.info(currentEndPoints.toString())
       val jsonStr:String = Neo4JUtilsImpl().getCypherQueryResult("MATCH (n) RETURN n limit 1;", "", transversalState)
-      if(jsonStr.equals("""{"records":[]}""")) Ok(json.toString()).as(JSON)
-      val result = deduce(0, json.toString(), json.toString(), currentEndPoints, transversalState)
-      logger.info(ToposoidUtils.formatMessageForLogger("All deduction units have been completed.", transversalState.userId))
-      Ok(result._3).as(JSON)
+      if(jsonStr.equals("""{"records":[]}""")){
+        Ok(json.toString()).as(JSON)
+      }else{
 
+
+
+        val result = deduce(0, json.toString(), json.toString(), currentEndPoints, transversalState)
+        logger.info(ToposoidUtils.formatMessageForLogger("All deduction units have been completed.", transversalState.userId))
+        Ok(result._3).as(JSON)
+      }
+    
     }catch {
       case e: Exception => {
         logger.error(ToposoidUtils.formatMessageForLogger(e.toString, transversalState.userId), e)
@@ -111,15 +116,10 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * @param endpoint
    * @return
    */
-
+  /*
   private def execute(endpoint:Endpoint, targetJson:String, resultJson:String, transversalState:TransversalState): (String, String) ={
 
     if(endpoint.host.equals(NO_HOST) || endpoint.port.equals(NO_PORT) || endpoint.name.equals(NO_NAME)) return (targetJson, resultJson)
-    /*
-    implicit val system = ActorSystem()
-    implicit val materializer = ActorMaterializer()
-    implicit val executionContext = system.dispatcher
-    */
     val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson).as[AnalyzedSentenceObjects]
     val deducitonConfig = analyzedSentenceObjects.deductionConfiguration
     val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.PREMISE.index).size > 0
@@ -129,7 +129,6 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       case _ => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.CLAIM.index)
     }
     val notFinished = checkTargets.filterNot(x => x.deductionResult.status)
-
     if(notFinished.size > 0) {
       val targets:List[AnalyzedSentenceObject] = notFinished      
       val result = ToposoidUtils.callComponent(
@@ -139,6 +138,31 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
             "execute",
             transversalState)
 
+      getResultJson(result, resultJson, deducitonConfig)
+    }else{
+      getResultJson(targetJson, resultJson, deducitonConfig)
+    }
+  }
+  */
+  private def execute(endpoint:Endpoint, targetJson:String, resultJson:String, transversalState:TransversalState): (String, String) ={
+
+    if(endpoint.host.equals(NO_HOST) || endpoint.port.equals(NO_PORT) || endpoint.name.equals(NO_NAME)) return (targetJson, resultJson)
+    val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson).as[AnalyzedSentenceObjects]
+    val deducitonConfig = analyzedSentenceObjects.deductionConfiguration
+    val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.PREMISE.index).size > 0
+    //If the proposition has premise, the truth of the claim is determined along with the truth of havePremiseInGivenProposition.
+    val targets = hasPremise match  {
+      case true => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.CLAIM.index && x.deductionResult.havePremiseInGivenProposition)
+      case _ => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.CLAIM.index)
+    }
+    
+    if(targets.size > 0) {
+      val result = ToposoidUtils.callComponent(
+            Json.toJson(AnalyzedSentenceObjects(targets, deducitonConfig)).toString(),
+            endpoint.host,
+            endpoint.port,
+            "execute",
+            transversalState)
       getResultJson(result, resultJson, deducitonConfig)
     }else{
       getResultJson(targetJson, resultJson, deducitonConfig)
