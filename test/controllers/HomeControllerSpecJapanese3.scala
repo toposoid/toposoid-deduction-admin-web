@@ -37,6 +37,8 @@ import play.api.test._
 import scala.concurrent.duration.DurationInt
 import com.ideal.linked.toposoid.common.ActionModeType
 import com.ideal.linked.toposoid.protocol.model.base.DeductionConfiguration
+import com.ideal.linked.toposoid.test.utils.TestUtils
+import com.ideal.linked.toposoid.common.DeductionPhaseType
 
 class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting {
 
@@ -98,6 +100,7 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
     }
   }
   */
+  /*
   def setEndPoints(indices: List[Int]): Unit = {
     val endPoints: Seq[Endpoint] = List(0, 1, 2, 3, 4).foldLeft(Seq.empty[Endpoint]) {
       (acc, x) => {
@@ -120,7 +123,7 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
     val result1 = call(controller.changeEndPoints(), fr1)
     status(result1) mustBe OK
   }
-
+  */
   "The specification1-japanese5(all)" should {
     "returns an appropriate response" in {
       val sentenceA = "太郎は秀逸な発案をした。"
@@ -154,7 +157,16 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val knowledge4 = getKnowledge(lang = lang, sentence = sentenceD, reference = referenceD, imageBoxInfo = imageBoxInfoD, transversalState)
       registerSingleClaim(KnowledgeForParser(propositionId4, sentenceId4, knowledge4), transversalState)
 
-      setEndPoints(List(0,1,2,3,4))
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
+
+      val endPoints: Seq[Endpoint] = List(Endpoint("toposoid-embedding-deduction-unit-common-web", "9202", "GroupEmbeddingMatch"), Endpoint("toposoid-clause-deduction-unit-common-web", "9201", "GroupClauseMatch"))
+      val fr0 = FakeRequest(POST, "/changeEndPoints")
+      .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
+      .withJsonBody(Json.toJson(endPoints))
+      val result0 = call(controller.changeEndPoints(), fr0)
+      status(result0) mustBe OK
+
 
       val paraphraseA = "太郎は秀逸な提案をした。"
       val paraphraseB = "ペットが２匹います。"
