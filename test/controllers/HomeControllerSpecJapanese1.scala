@@ -39,6 +39,7 @@ import scala.concurrent.duration.DurationInt
 import com.ideal.linked.toposoid.common.ActionModeType
 import com.ideal.linked.toposoid.test.utils.TestUtils
 import com.ideal.linked.toposoid.common.DeductionPhaseType
+import com.ideal.linked.toposoid.protocol.model.base.KnowledgeBaseSideInfo
 
 class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting {
 
@@ -53,6 +54,12 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
   }
 
   override def beforeAll(): Unit = {
+    val endPoints: Seq[Endpoint] = List(Endpoint("toposoid-embedding-deduction-unit-common-web", "9202", "GroupEmbeddingMatch"), Endpoint("toposoid-clause-deduction-unit-common-web", "9201", "GroupClauseMatch"))
+    val fr0 = FakeRequest(POST, "/changeEndPoints")
+    .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
+    .withJsonBody(Json.toJson(endPoints))
+    val result0 = call(controller.changeEndPoints(), fr0)
+    status(result0) mustBe OK
     TestUtilsEx.deleteNeo4JAllData(transversalState)
   }
 
@@ -152,11 +159,14 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
 
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.deductionResult.coveredPropositionEdges.size}
-      val coveredKnowledgeSize = targetAsos.foldLeft(0){(acc, x) => x.deductionResult.evidenceKnowledgeList.size}
+      val coveredKnowledgeList = targetAsos.foldLeft(List.empty[KnowledgeBaseSideInfo]){(acc, x) => acc ::: x.deductionResult.evidenceKnowledgeList}
       val actualEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.edgeList.size}
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(coveredKnowledgeSize == 2)
+      val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
+      assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
+      val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
+      assert(sentenceIds.size == 1 && sentenceIds.equals(sentenceId1))
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
