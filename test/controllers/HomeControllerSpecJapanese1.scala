@@ -272,6 +272,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("ClauseImageMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
       val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
       assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))
+      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size == 1).size == 1)
 
