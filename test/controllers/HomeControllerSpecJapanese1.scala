@@ -211,7 +211,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
       val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
-      assert(deductionUnits.contains("ClauseSynonymMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
+      assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("ClauseSynonymMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
       val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
       assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))
 
@@ -224,12 +224,12 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
   "The specification3-japanese(image-vector-match)" should {
     "returns an appropriate response" in {
 
-      val sentenceA = "猫が２匹います。"
+      val sentenceA = "猫が２匹寝てます。"
       val referenceA = Reference(url = "", surface = "猫が", surfaceIndex = 0, isWholeSentence = false,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
       val imageBoxInfoA = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
 
-      val paraphraseA = "ペットが２匹います。"
+      val paraphraseA = "ペットが２匹寝てます。"
       val referenceParaA = Reference(url = "", surface = "ペットが", surfaceIndex = 0, isWholeSentence = false,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
       val imageBoxInfoParaA = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
@@ -264,12 +264,14 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
 
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.deductionResult.coveredPropositionEdges.size}
-      val coveredKnowledgeSize = targetAsos.foldLeft(0){(acc, x) => x.deductionResult.evidenceKnowledgeList.size}
+      val coveredKnowledgeList = targetAsos.foldLeft(List.empty[KnowledgeBaseSideInfo]){(acc, x) => acc ::: x.deductionResult.evidenceKnowledgeList}
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(coveredKnowledgeSize == 2)
-      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
+      val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
+      assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("ClauseImageMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
+      val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
+      assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size == 1).size == 1)
 
