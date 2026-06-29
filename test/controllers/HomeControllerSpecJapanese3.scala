@@ -127,7 +127,7 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
   "The specification1-japanese5(all)" should {
     "returns an appropriate response" in {
       val sentenceA = "太郎は秀逸な発案をした。"
-      val sentenceB = "猫が２匹います。"
+      val sentenceB = "猫が２匹寝てます。"
       val referenceB = Reference(url = "", surface = "猫が", surfaceIndex = 0, isWholeSentence = false,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
       val imageBoxInfoB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
@@ -169,13 +169,13 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
 
 
       val paraphraseA = "太郎は秀逸な提案をした。"
-      val paraphraseB = "ペットが２匹います。"
+      val paraphraseB = "ペットが２匹寝てます。"
       val referenceParaB = Reference(url = "", surface = "ペットが", surfaceIndex = 0, isWholeSentence = false,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
       val imageBoxInfoParaB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
       val knowledgeParaB = getKnowledge(lang, paraphraseB, referenceParaB, imageBoxInfoParaB, transversalState)
       val paraphraseC = "自然界の物理法則は例外なくどの慣性系でも成立する。"
-      val paraphraseD = "大型車が一台止まっています。"
+      val paraphraseD = "トレーラーが一台止まっています。"
       val referenceParaD = Reference(url = "", surface = "大型車が", surfaceIndex = 0, isWholeSentence = true,
         originalUrlOrReference = "https://farm8.staticflickr.com/7103/7210629614_5a388d9a9c_z.jpg")
       val imageBoxInfoParaD = ImageBoxInfo(x = 23, y = 25, weight = 601, height = 341)
@@ -223,48 +223,21 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
 
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
-      /*
-      val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) {
-        (acc2, y) => {
-          if (x.deductionResult.coveredPropositionResults.filter(y => List("sentence-feature-match", "whole-sentence-image-feature-match").contains(y.deductionUnit)).size > 0) {
-            if(y.deductionUnit.equals("sentence-feature-match") || y.deductionUnit.equals("whole-sentence-image-feature-match")){
-              acc2 + y.coveredPropositionEdges.size
-            }else{
-              0
-            }
-          } else {
-            acc2 + y.coveredPropositionEdges.size
-          }
-        }} + acc }
-      */
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) =>
-        x.deductionResult.coveredPropositionEdges.foldLeft(0) {
-          (acc2, y) => {            
-            if (x.deductionResult.evidenceKnowledgeList.filter(y => y.deductionUnits.contains("EmbeddingSentenceMatch") || y.deductionUnits.contains("EmbeddingWholeSentenceImageMatch")).size > 0) {
-              acc2 + x.deductionResult.coveredPropositionEdges.size
-            } else {
-              0              
-            }
-          }
-        } + acc
+          acc + x.deductionResult.coveredPropositionEdges.size
       }
+      
+
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(analyzedSentenceObjects.analyzedSentenceObjects.size == 4)
       assert(targetAsos.filter(x => x.deductionResult.status).size == 4)
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      /*
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("synonym-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("sentence-feature-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("whole-sentence-image-feature-match")).size > 0).size > 0)
-      */
-      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("ClauseBaseMatch")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("ClauseSynonymMatch")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("ClauseImageMatch")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("EmbeddingWholeSentenceImageMatch")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("EmbeddingSentenceMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseBaseMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseSynonymMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseImageMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingWholeSentenceImageMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingSentenceMatch")).size > 0).size > 0)
 
     }
   }

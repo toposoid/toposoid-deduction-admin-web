@@ -37,6 +37,9 @@ import play.api.test._
 
 import scala.concurrent.duration.DurationInt
 import com.ideal.linked.toposoid.common.ActionModeType
+import com.ideal.linked.toposoid.protocol.model.base.KnowledgeBaseSideInfo
+import com.ideal.linked.toposoid.test.utils.TestUtils
+import com.ideal.linked.toposoid.common.DeductionPhaseType
 
 class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting{
 
@@ -94,7 +97,7 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
       status(result1) mustBe OK
     }
   }
-  */
+  
   def setEndPoints(indices: List[Int]): Unit = {
     val endPoints: Seq[Endpoint] = List(0, 1, 2, 3, 4).foldLeft(Seq.empty[Endpoint]) {
       (acc, x) => {
@@ -117,7 +120,7 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
     val result1 = call(controller.changeEndPoints(), fr1)
     status(result1) mustBe OK
   }
-
+  */
 
   "The specification1-english(exist-match)" should {
     "returns an appropriate response" in {
@@ -128,7 +131,9 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
       val knowledge1 = Knowledge(sentenceA, "en_US", "{}", false)
       val paraphrase1 = Knowledge(paraphraseA,"en_US", "{}", false)
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
-      setEndPoints(List(0,1))
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
+
 
       val propositionIdForInference = java.util.UUID.randomUUID().toString
       val premiseKnowledge = List.empty[KnowledgeForParser]
@@ -151,11 +156,14 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
 
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.deductionResult.coveredPropositionEdges.size}
-      val coveredKnowledgeSize = targetAsos.foldLeft(0){(acc, x) => x.deductionResult.evidenceKnowledgeList.size}
+      val coveredKnowledgeList = targetAsos.foldLeft(List.empty[KnowledgeBaseSideInfo]){(acc, x) => acc ::: x.deductionResult.evidenceKnowledgeList}
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(actualEdgeSize <= coveredKnowledgeSize)
+      val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
+      assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
+      val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
+      assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))      
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
@@ -172,7 +180,9 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
       val knowledge1 = Knowledge(sentenceA, "en_US", "{}", false)
       val paraphrase1 = Knowledge(paraphraseA,"en_US", "{}", false)
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
-      setEndPoints(List(0,1))
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
+
 
       val propositionIdForInference = java.util.UUID.randomUUID().toString
       val premiseKnowledge = List.empty[KnowledgeForParser]
@@ -194,11 +204,14 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.deductionResult.coveredPropositionEdges.size}
-      val coveredKnowledgeSize = targetAsos.foldLeft(0){(acc, x) => x.deductionResult.evidenceKnowledgeList.size}
+      val coveredKnowledgeList = targetAsos.foldLeft(List.empty[KnowledgeBaseSideInfo]){(acc, x) => acc ::: x.deductionResult.evidenceKnowledgeList}
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(actualEdgeSize <= coveredKnowledgeSize)
+      val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
+      assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("ClauseSynonymMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
+      val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
+      assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))      
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("synonym-match")).size == 1).size == 1)
@@ -225,7 +238,9 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
       val knowledge1 = getKnowledge(lang = lang, sentence = sentenceA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
       val paraphrase1 = getKnowledge(lang = lang, sentence = paraphraseA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
-      setEndPoints(List(0, 1, 3))
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
+
 
       val propositionIdForInference = getUUID()
       val premiseKnowledge = List.empty[KnowledgeForParser]
@@ -248,11 +263,14 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
 
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.deductionResult.coveredPropositionEdges.size}
-      val coveredKnowledgeSize = targetAsos.foldLeft(0){(acc, x) => x.deductionResult.evidenceKnowledgeList.size}
+      val coveredKnowledgeList = targetAsos.foldLeft(List.empty[KnowledgeBaseSideInfo]){(acc, x) => acc ::: x.deductionResult.evidenceKnowledgeList}
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(actualEdgeSize <= coveredKnowledgeSize)
+      val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
+      assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("ClauseImageMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
+      val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
+      assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))      
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size == 1).size == 1)
