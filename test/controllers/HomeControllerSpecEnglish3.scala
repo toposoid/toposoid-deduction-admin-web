@@ -37,6 +37,8 @@ import play.api.test._
 import scala.concurrent.duration.DurationInt
 import com.ideal.linked.toposoid.common.ActionModeType
 import com.ideal.linked.toposoid.protocol.model.base.DeductionConfiguration
+import com.ideal.linked.toposoid.test.utils.TestUtils
+import com.ideal.linked.toposoid.common.DeductionPhaseType
 
 class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting{
 
@@ -57,7 +59,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
   override def afterAll(): Unit = {
     TestUtilsEx.deleteNeo4JAllData(transversalState)
   }
-
+  /*
   def setEndPoints(indices: List[Int]): Unit = {
     val endPoints: Seq[Endpoint] = List(0, 1, 2, 3, 4).foldLeft(Seq.empty[Endpoint]) {
       (acc, x) => {
@@ -80,7 +82,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
     val result1 = call(controller.changeEndPoints(), fr1)
     status(result1) mustBe OK
   }
-
+  */
   override implicit def defaultAwaitTimeout: Timeout = 600.seconds
   val controller: HomeController = inject[HomeController]
   val lang = "en_US"
@@ -117,7 +119,9 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val sentenceId4 = getUUID()
       val knowledge4 = getKnowledge(lang = lang, sentence = sentenceD, reference = referenceD, imageBoxInfo = imageBoxInfoD, transversalState)
       registerSingleClaim(KnowledgeForParser(propositionId4, sentenceId4, knowledge4), transversalState)
-      setEndPoints(List(0,1,2,3,4))
+      
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
 
       val paraphraseA = "Living is so comfortable."
       val paraphraseB = "There are two pets."
@@ -174,23 +178,24 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val jsonResult = contentAsJson(result).toString()
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
-      /*
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) =>
-        x.deductionResult.coveredPropositionResults.foldLeft(0) {
-          (acc2, y) => {
-            if (x.deductionResult.coveredPropositionResults.filter(y => List("sentence-feature-match", "whole-sentence-image-feature-match").contains(y.deductionUnit)).size > 0) {
-              if (y.deductionUnit.equals("sentence-feature-match") || y.deductionUnit.equals("whole-sentence-image-feature-match")) {
-                acc2 + y.coveredPropositionEdges.size
-              } else {
-                0
-              }
-            } else {
-              acc2 + y.coveredPropositionEdges.size
-            }
-          }
-        } + acc
+          acc + x.deductionResult.coveredPropositionEdges.size
       }
-      */
+      
+
+      val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
+
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.size == 4)
+      assert(targetAsos.filter(x => x.deductionResult.status).size == 4)
+      assert(actualEdgeSize == coveredPropositionEdgeSize)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseBaseMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseSynonymMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseImageMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingWholeSentenceImageMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingSentenceMatch")).size > 0).size > 0)
+      
+      /*
+      val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) =>
         x.deductionResult.coveredPropositionEdges.foldLeft(0) {
           (acc2, y) => {            
@@ -208,19 +213,12 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       assert(analyzedSentenceObjects.analyzedSentenceObjects.size == 4)
       assert(targetAsos.filter(x => x.deductionResult.status).size == 4)
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      /*
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("synonym-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("sentence-feature-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("whole-sentence-image-feature-match")).size > 0).size > 0)
-      */
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("ClauseBaseMatch")).size > 0).size > 0)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("ClauseSynonymMatch")).size > 0).size > 0)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("ClauseImageMatch")).size > 0).size > 0)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("EmbeddingWholeSentenceImageMatch")).size > 0).size > 0)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("EmbeddingSentenceMatch")).size > 0).size > 0)
-
+      */
     }
   }
 
