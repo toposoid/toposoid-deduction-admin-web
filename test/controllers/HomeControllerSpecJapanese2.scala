@@ -36,6 +36,10 @@ import play.api.test.Helpers.{POST, contentType, status, _}
 import play.api.test._
 
 import scala.concurrent.duration.DurationInt
+import com.ideal.linked.toposoid.common.ActionModeType
+import com.ideal.linked.toposoid.test.utils.TestUtils
+import com.ideal.linked.toposoid.common.DeductionPhaseType
+import com.ideal.linked.toposoid.protocol.model.base.KnowledgeBaseSideInfo
 
 class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting {
 
@@ -93,6 +97,7 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
     }
   }
   */
+  /*
   def setEndPoints(indices: List[Int]): Unit = {
     val endPoints: Seq[Endpoint] = List(0, 1, 2, 3, 4).foldLeft(Seq.empty[Endpoint]) {
       (acc, x) => {
@@ -115,7 +120,7 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
     val result1 = call(controller.changeEndPoints(), fr1)
     status(result1) mustBe OK
   }
-
+  */
   override implicit def defaultAwaitTimeout: Timeout = 600.seconds
 
   val controller: HomeController = inject[HomeController]
@@ -130,13 +135,19 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
 
       val knowledge1 = Knowledge(sentenceA, "ja_JP", "{}", false)
       val paraphrase1 = Knowledge(paraphraseA, "ja_JP", "{}", false)
-      registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
-      setEndPoints(List(2, 4))
+      registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)      
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
+      val endPoints: Seq[Endpoint] = List(Endpoint("toposoid-embedding-deduction-unit-common-web", "9202", "GroupEmbeddingMatch"))
+      val fr0 = FakeRequest(POST, "/changeEndPoints")
+      .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
+      .withJsonBody(Json.toJson(endPoints))
+      val result0 = call(controller.changeEndPoints(), fr0)
+      status(result0) mustBe OK
 
       val propositionIdForInference = java.util.UUID.randomUUID().toString
       val premiseKnowledge = List.empty[KnowledgeForParser]
       val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, java.util.UUID.randomUUID().toString, paraphrase1))
-      val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
+      val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge, ActionModeType.DEDUCTION_MODE.index)).toString()
 
       val json4 = ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_PORT"), "analyze", transversalState)
 
@@ -152,14 +163,19 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
 
-      val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.coveredPropositionEdges.size } + acc }
-      val coveredKnowledgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.knowledgeBaseSideInfoList.size } + acc }
+      val coveredPropositionEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.deductionResult.coveredPropositionEdges.size}
+      val coveredKnowledgeList = targetAsos.foldLeft(List.empty[KnowledgeBaseSideInfo]){(acc, x) => acc ::: x.deductionResult.evidenceKnowledgeList}
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(coveredKnowledgeSize == 1)
+      val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
+      assert(deductionUnits.contains("EmbeddingSentenceMatch"))
+      val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
+      assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("sentence-feature-match")).size == 1).size == 1)
+
+      //TODO:評価方法を変更
+      //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("sentence-feature-match")).size == 1).size == 1)
 
     }
   }
@@ -167,12 +183,12 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
   "The specification4-japanese(whole-sentence-image-feature-match)" should {
     "returns an appropriate response" in {
 
-      val sentenceA = "猫が２匹います。"
+      val sentenceA = "猫が２匹寝てます。"
       val referenceA = Reference(url = "", surface = "猫が", surfaceIndex = 0, isWholeSentence = true,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
       val imageBoxInfoA = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
 
-      val paraphraseA = "ペットが２匹います。"
+      val paraphraseA = "ペットが２匹寝てます。"
       val referenceParaA = Reference(url = "", surface = "ペットが", surfaceIndex = 0, isWholeSentence = true,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
       val imageBoxInfoParaA = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
@@ -183,12 +199,19 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
       val knowledge1 = getKnowledge(lang = lang, sentence = sentenceA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
       val paraphrase1 = getKnowledge(lang = lang, sentence = paraphraseA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
-      setEndPoints(List(2, 4))
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)      
+      val endPoints: Seq[Endpoint] = List(Endpoint("toposoid-embedding-deduction-unit-common-web", "9202", "GroupEmbeddingMatch"))
+      val fr0 = FakeRequest(POST, "/changeEndPoints")
+      .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
+      .withJsonBody(Json.toJson(endPoints))
+      val result0 = call(controller.changeEndPoints(), fr0)
+      status(result0) mustBe OK
+
 
       val propositionIdForInference = getUUID()
       val premiseKnowledge = List.empty[KnowledgeForParser]
       val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, getUUID(), paraphrase1))
-      val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge)).toString()
+      val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge, ActionModeType.DEDUCTION_MODE.index)).toString()
       val asos = addImageInfoToSemiGlobalNode(lang = lang, inputSentence, List(getImageInfo(referenceParaA, imageBoxInfoParaA, transversalState)), transversalState)
       val json:String = Json.toJson(asos).toString()
 
@@ -204,14 +227,18 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
 
-      val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.coveredPropositionEdges.size } + acc }
-      val coveredKnowledgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) { (acc2, y) => acc2 + y.knowledgeBaseSideInfoList.size } + acc }
+      val coveredPropositionEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.deductionResult.coveredPropositionEdges.size}
+      val coveredKnowledgeList = targetAsos.foldLeft(List.empty[KnowledgeBaseSideInfo]){(acc, x) => acc ::: x.deductionResult.evidenceKnowledgeList}
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(coveredKnowledgeSize == 1)
+      val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
+      assert(deductionUnits.contains("EmbeddingSentenceMatch") && deductionUnits.contains("EmbeddingWholeSentenceImageMatch"))
+      val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
+      assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))      
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("whole-sentence-image-feature-match")).size == 1).size == 1)
+      //TODO:評価方法を変更
+      //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("whole-sentence-image-feature-match")).size == 1).size == 1)
 
     }
   }

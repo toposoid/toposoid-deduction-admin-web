@@ -35,6 +35,10 @@ import play.api.test.Helpers.{POST, contentType, status, _}
 import play.api.test._
 
 import scala.concurrent.duration.DurationInt
+import com.ideal.linked.toposoid.common.ActionModeType
+import com.ideal.linked.toposoid.protocol.model.base.DeductionConfiguration
+import com.ideal.linked.toposoid.test.utils.TestUtils
+import com.ideal.linked.toposoid.common.DeductionPhaseType
 
 class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting {
 
@@ -96,6 +100,7 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
     }
   }
   */
+  /*
   def setEndPoints(indices: List[Int]): Unit = {
     val endPoints: Seq[Endpoint] = List(0, 1, 2, 3, 4).foldLeft(Seq.empty[Endpoint]) {
       (acc, x) => {
@@ -118,11 +123,11 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
     val result1 = call(controller.changeEndPoints(), fr1)
     status(result1) mustBe OK
   }
-
+  */
   "The specification1-japanese5(all)" should {
     "returns an appropriate response" in {
       val sentenceA = "太郎は秀逸な発案をした。"
-      val sentenceB = "猫が２匹います。"
+      val sentenceB = "猫が２匹寝てます。"
       val referenceB = Reference(url = "", surface = "猫が", surfaceIndex = 0, isWholeSentence = false,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
       val imageBoxInfoB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
@@ -152,16 +157,25 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val knowledge4 = getKnowledge(lang = lang, sentence = sentenceD, reference = referenceD, imageBoxInfo = imageBoxInfoD, transversalState)
       registerSingleClaim(KnowledgeForParser(propositionId4, sentenceId4, knowledge4), transversalState)
 
-      setEndPoints(List(0,1,2,3,4))
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
+      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
+
+      val endPoints: Seq[Endpoint] = List(Endpoint("toposoid-embedding-deduction-unit-common-web", "9202", "GroupEmbeddingMatch"), Endpoint("toposoid-clause-deduction-unit-common-web", "9201", "GroupClauseMatch"))
+      val fr0 = FakeRequest(POST, "/changeEndPoints")
+      .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
+      .withJsonBody(Json.toJson(endPoints))
+      val result0 = call(controller.changeEndPoints(), fr0)
+      status(result0) mustBe OK
+
 
       val paraphraseA = "太郎は秀逸な提案をした。"
-      val paraphraseB = "ペットが２匹います。"
+      val paraphraseB = "ペットが２匹寝てます。"
       val referenceParaB = Reference(url = "", surface = "ペットが", surfaceIndex = 0, isWholeSentence = false,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
       val imageBoxInfoParaB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
       val knowledgeParaB = getKnowledge(lang, paraphraseB, referenceParaB, imageBoxInfoParaB, transversalState)
       val paraphraseC = "自然界の物理法則は例外なくどの慣性系でも成立する。"
-      val paraphraseD = "大型車が一台止まっています。"
+      val paraphraseD = "トレーラーが一台止まっています。"
       val referenceParaD = Reference(url = "", surface = "大型車が", surfaceIndex = 0, isWholeSentence = true,
         originalUrlOrReference = "https://farm8.staticflickr.com/7103/7210629614_5a388d9a9c_z.jpg")
       val imageBoxInfoParaD = ImageBoxInfo(x = 23, y = 25, weight = 601, height = 341)
@@ -176,26 +190,26 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val claimKnowledgeA = List(knowledgeForParser1)
       val claimKnowledgeC = List(knowledgeForParser3)
 
-      val inputSentenceA = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledgeA)).toString()
+      val inputSentenceA = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledgeA, ActionModeType.DEDUCTION_MODE.index)).toString()
       val jsonNoImageA = ToposoidUtils.callComponent(inputSentenceA, conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_PORT"), "analyze", transversalState)
 
       val premiseKnowledgeB = List.empty[KnowledgeForParser]
       val claimKnowledgeB = List(KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaB))
-      val inputSentenceB = Json.toJson(InputSentenceForParser(premiseKnowledgeB, claimKnowledgeB)).toString()
+      val inputSentenceB = Json.toJson(InputSentenceForParser(premiseKnowledgeB, claimKnowledgeB, ActionModeType.DEDUCTION_MODE.index)).toString()
 
-      val inputSentenceC = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledgeC)).toString()
+      val inputSentenceC = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledgeC, ActionModeType.DEDUCTION_MODE.index)).toString()
       val jsonNoImageC = ToposoidUtils.callComponent(inputSentenceC, conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_PORT"), "analyze", transversalState)
 
       val premiseKnowledgeD = List.empty[KnowledgeForParser]
       val claimKnowledgeD = List(KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaD))
-      val inputSentenceD = Json.toJson(InputSentenceForParser(premiseKnowledgeD, claimKnowledgeD)).toString()
+      val inputSentenceD = Json.toJson(InputSentenceForParser(premiseKnowledgeD, claimKnowledgeD, ActionModeType.DEDUCTION_MODE.index)).toString()
 
       val asoA = Json.parse(jsonNoImageA).as[AnalyzedSentenceObjects].analyzedSentenceObjects.head
       val asoB = addImageInfoToLocalNode(lang, inputSentenceB, knowledgeParaB.knowledgeForImages, transversalState).analyzedSentenceObjects.head
       val asoC = Json.parse(jsonNoImageC).as[AnalyzedSentenceObjects].analyzedSentenceObjects.head
       val asoD = addImageInfoToSemiGlobalNode(lang, inputSentenceD, knowledgeParaD.knowledgeForImages, transversalState).analyzedSentenceObjects.head
 
-      val inputAsos = AnalyzedSentenceObjects(List(asoA, asoB, asoC, asoD))
+      val inputAsos = AnalyzedSentenceObjects(List(asoA, asoB, asoC, asoD), DeductionConfiguration(ActionModeType.DEDUCTION_MODE.index, "", Map.empty[String, String], 10))
       val json = Json.toJson(inputAsos).toString()
       val fr = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
@@ -209,28 +223,22 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
 
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
-      val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) => x.deductionResult.coveredPropositionResults.foldLeft(0) {
-        (acc2, y) => {
-          if (x.deductionResult.coveredPropositionResults.filter(y => List("sentence-feature-match", "whole-sentence-image-feature-match").contains(y.deductionUnit)).size > 0) {
-            if(y.deductionUnit.equals("sentence-feature-match") || y.deductionUnit.equals("whole-sentence-image-feature-match")){
-              acc2 + y.coveredPropositionEdges.size
-            }else{
-              0
-            }
-          } else {
-            acc2 + y.coveredPropositionEdges.size
-          }
-        }} + acc }
+      val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) =>
+          acc + x.deductionResult.coveredPropositionEdges.size
+      }
+      
+
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(analyzedSentenceObjects.analyzedSentenceObjects.size == 4)
       assert(targetAsos.filter(x => x.deductionResult.status).size == 4)
       assert(actualEdgeSize == coveredPropositionEdgeSize)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("synonym-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("sentence-feature-match")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("whole-sentence-image-feature-match")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseBaseMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseSynonymMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseImageMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingWholeSentenceImageMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingSentenceMatch")).size > 0).size > 0)
+
     }
   }
 
