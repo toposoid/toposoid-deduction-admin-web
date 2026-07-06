@@ -1,9 +1,6 @@
 name: Test And Build
 on:
-  push:
-    branches:
-      - feature
-  workflow_dispatch:
+  workflow_call:
 env:
   PJ_ACTOR: toposoid
   PJ_REPO: toposoid-deduction-admin-web
