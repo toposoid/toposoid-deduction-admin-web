@@ -10,8 +10,8 @@ env:
   PJ_BRANCH: feature
   PJ_VERSION: 0.7-SNAPSHOT
 jobs:
-  unit-test_toposoid-deduction-admin-web:
-    runs-on: self-hosted
+  unit-test_toposoid-deduction-admin-web-arm64:
+    runs-on: [self-hosted, linux, ARM64]
     steps:
       - name: Clone ${{ env.PJ_REPO }}
         uses: actions/checkout@v3
@@ -29,27 +29,10 @@ jobs:
             docker system prune -f
             docker volume prune -f
             docker build --build-arg TARGET_BRANCH=${{ env.PJ_BRANCH }} --tag ${{ env.PJ_REPO }}:${{ env.PJ_VERSION }} -f Dockerfile-workflow --no-cache .
-            docker compose -f docker-compose-workflow.yml up -d toposoid-deduction-admin-web
+            docker compose -f docker-compose-workflow.yml up -d 
             docker compose -f docker-compose-workflow.yml exec -T ${{ env.PJ_REPO }} bash -c "cd ${{ env.PJ_REPO }} && sbt headerCheck"
             docker compose -f docker-compose-workflow.yml exec -T ${{ env.PJ_REPO }} bash -c "cd ${{ env.PJ_REPO }} && sbt test:headerCheck"
             docker compose -f docker-compose-workflow.yml exec -T ${{ env.PJ_REPO }} bash -c "cd ${{ env.PJ_REPO }} && sbt compile"
-            docker compose -f docker-compose-workflow.yml up -d toposoid-common-nlp-japanese-web
-            docker compose -f docker-compose-workflow.yml up -d neo4j
-            docker compose -f docker-compose-workflow.yml up -d sentence-weaviate
-            docker compose -f docker-compose-workflow.yml up -d data-accessor-sentence-weaviate-web
-            docker compose -f docker-compose-workflow.yml up -d image-weaviate
-            docker compose -f docker-compose-workflow.yml up -d data-accessor-image-weaviate-web
-            docker compose -f docker-compose-workflow.yml up -d data-accessor-neo4j-web
-            docker compose -f docker-compose-workflow.yml up -d toposoid-deduction-unit-exact-match-web
-            docker compose -f docker-compose-workflow.yml up -d toposoid-deduction-unit-synonym-match-web
-            docker compose -f docker-compose-workflow.yml up -d toposoid-deduction-unit-image-vector-match-web
-            docker compose -f docker-compose-workflow.yml up -d toposoid-deduction-unit-sentence-vector-match-web
-            docker compose -f docker-compose-workflow.yml up -d toposoid-deduction-unit-whole-sentence-image-match-web
-            docker compose -f docker-compose-workflow.yml up -d toposoid-sentence-parser-japanese-web
-            docker compose -f docker-compose-workflow.yml up -d toposoid-contents-admin-web
-            docker compose -f docker-compose-workflow.yml up -d toposoid-common-image-recognition-web
-            docker compose -f docker-compose-workflow.yml up -d redis
-            docker compose -f docker-compose-workflow.yml up -d data-accessor-redis-web
             curl --retry 15 --retry-delay 5 --retry-all-errors -X POST http://localhost:7474
             curl --retry 15 --retry-delay 5 --retry-all-errors -X POST -H "Content-Type: application/json" -H "X_TOPOSOID_TRANSVERSAL_STATE: {'userId':'test-user', 'username':'guest', 'roleId':0, 'csrfToken':''}" -d '{"sentence": "これはテストです。"}' http://localhost:9006/getFeatureVector
             docker compose -f docker-compose-workflow.yml exec -T ${{ env.PJ_REPO }} bash -c "cd ${{ env.PJ_REPO }} && sbt 'testOnly **.*Japanese0'"
@@ -83,6 +66,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: toposoid/${{ env.PJ_REPO }}:${{ env.PJ_VERSION }}
+          tags: toposoid/${{ env.PJ_REPO }}:${{ env.PJ_VERSION }}-arm64
           build-args: |
             TARGET_BRANCH=${{ env.PJ_BRANCH }}
