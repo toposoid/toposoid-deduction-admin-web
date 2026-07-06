@@ -11,7 +11,7 @@ jobs:
     runs-on: [self-hosted, linux, X64]
     steps:
       - name: Clone ${{ env.PJ_REPO }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
             repository: ${{ env.PJ_ACTOR }}/${{ env.PJ_REPO }}
       - name: Execute tests
@@ -50,19 +50,20 @@ jobs:
             docker rmi --force ${{ env.PJ_REPO }}:${{ env.PJ_VERSION }}
       - name: Docker meta
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v3
+        uses: crazy-max/ghaction-docker-meta@v5
         with:
           images: toposoid/${{ env.PJ_REPO }}:${{ env.PJ_VERSION }}
       - name: Login to CR
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: toposoid
           password: ${{ secrets.CR_TOKEN }}
       - name: Build And Push Docker Image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
+          provenance: false
           tags: toposoid/${{ env.PJ_REPO }}:${{ env.PJ_VERSION }}-amd64
           build-args: |
             TARGET_BRANCH=${{ env.PJ_BRANCH }}
