@@ -286,7 +286,7 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
     }
   }
 
-  "The specification4-english(image-table-match)" should {
+  "The specification4-english(table-vector-match)" should {
     "returns an appropriate response" in {
 
       val sentenceA = "There is evidence data."
@@ -337,7 +337,7 @@ class HomeControllerSpecEnglish1 extends PlaySpec with BeforeAndAfter with Befor
 
       assert(actualEdgeSize == coveredPropositionEdgeSize)
       val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
-      assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("ClauseImageMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
+      assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("ClauseTableMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
       val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
       assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))      
       assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
