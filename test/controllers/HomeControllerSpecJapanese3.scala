@@ -175,7 +175,7 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
 
 
       val paraphraseA = "太郎は秀逸な提案をした。"
-      val knowledgeParaA = Knowledge(lang, paraphraseA, extentInfoJson = "{}")
+      val knowledgeParaA = Knowledge(paraphraseA, lang, extentInfoJson = "{}")
 
       val paraphraseB = "ペットが２匹寝てます。"      
       val referenceParaB = Reference(url = "", surface = "ペットが", surfaceIndex = 0, isWholeSentence = false,
@@ -183,10 +183,10 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val imageReferenceParaB = ImageReference(referenceParaB, x = 11, y = 11, width = 466, height = 310)
       val knowledgeForImageParaB = KnowledgeForImage(getUUID(), imageReferenceParaB)                          
       //val imageBoxInfoParaB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
-      val knowledgeParaB = Knowledge(lang, paraphraseB, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageParaB, transversalState)))
+      val knowledgeParaB = Knowledge(paraphraseB, lang, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageParaB, transversalState)))
 
       val paraphraseC = "自然界の物理法則は例外なくどの慣性系でも成立する。"
-      val knowledgeParaC = Knowledge(lang, paraphraseC, extentInfoJson = "{}")
+      val knowledgeParaC = Knowledge(paraphraseC, lang, extentInfoJson = "{}")
       
       val paraphraseD = "トレーラーが一台止まっています。"
       val referenceParaD = Reference(url = "", surface = "大型車が", surfaceIndex = 0, isWholeSentence = true,
@@ -194,7 +194,7 @@ class HomeControllerSpecJapanese3 extends PlaySpec with BeforeAndAfter with Befo
       val imageReferenceParaD = ImageReference(referenceParaD, x = 23, y = 25, width = 601, height = 341)
       val knowledgeForImageParaD = KnowledgeForImage(getUUID(), imageReferenceParaD)               
       //val imageBoxInfoParaD = ImageBoxInfo(x = 23, y = 25, weight = 601, height = 341)
-      val knowledgeParaD = Knowledge(lang, paraphraseD, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageParaD, transversalState)))
+      val knowledgeParaD = Knowledge(paraphraseD, lang, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageParaD, transversalState)))
 
       val propositionIdForInference = getUUID()
 
