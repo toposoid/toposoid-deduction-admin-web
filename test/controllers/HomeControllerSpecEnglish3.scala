@@ -24,7 +24,8 @@ import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, Knowledg
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
 import com.ideal.linked.toposoid.protocol.model.frontend.Endpoint
 import com.ideal.linked.toposoid.protocol.model.parser.{InputSentenceForParser, KnowledgeForParser}
-import controllers.TestUtilsEx.{addImageInfoToLocalNode, addImageInfoToSemiGlobalNode, getKnowledge, getUUID, registerSingleClaim}
+import com.ideal.linked.toposoid.test.utils.TestUtils.{getAnalyzedSentenceObjectsJson, getAnalyzedSentenceObjectsJsonForSemiGlobal, setDeductionUnitEndPoints, uploadImage}
+import controllers.TestUtilsEx.{getUUID, registerSingleClaim, deleteNeo4JAllData}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -37,8 +38,8 @@ import play.api.test._
 import scala.concurrent.duration.DurationInt
 import com.ideal.linked.toposoid.common.ActionModeType
 import com.ideal.linked.toposoid.protocol.model.base.DeductionConfiguration
-import com.ideal.linked.toposoid.test.utils.TestUtils
 import com.ideal.linked.toposoid.common.DeductionPhaseType
+import com.ideal.linked.toposoid.knowledgebase.regist.model.ImageReference
 
 class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting{
 
@@ -48,16 +49,16 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
   before {
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
-    TestUtilsEx.deleteNeo4JAllData(transversalState)
+    deleteNeo4JAllData(transversalState)
     Thread.sleep(1000)
   }
 
   override def beforeAll(): Unit = {
-    TestUtilsEx.deleteNeo4JAllData(transversalState)
+    deleteNeo4JAllData(transversalState)
   }
 
   override def afterAll(): Unit = {
-    TestUtilsEx.deleteNeo4JAllData(transversalState)
+    deleteNeo4JAllData(transversalState)
   }
   /*
   def setEndPoints(indices: List[Int]): Unit = {
@@ -93,12 +94,17 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val sentenceB = "There are two cats."
       val referenceB = Reference(url = "", surface = "cats", surfaceIndex = 3, isWholeSentence = false,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
-      val imageBoxInfoB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
+      val imageReferenceB = ImageReference(referenceB, x = 11, y = 11, width = 466, height = 310)
+      val knowledgeForImageB = KnowledgeForImage(getUUID(), imageReferenceB)                    
+
+      //val imageBoxInfoB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
       val sentenceC = "The culprit is among us."
       val sentenceD = "A large truck is parked."
       val referenceD = Reference(url = "", surface = "truck", surfaceIndex = 2, isWholeSentence = true,
         originalUrlOrReference = "https://farm8.staticflickr.com/7103/7210629614_5a388d9a9c_z.jpg")
-      val imageBoxInfoD = ImageBoxInfo(x = 23, y = 25, weight = 601, height = 341)
+      val imageReferenceD = ImageReference(referenceD, x = 23, y = 25, width = 601, height = 341)
+      val knowledgeForImageD = KnowledgeForImage(getUUID(), imageReferenceD)         
+      //val imageBoxInfoD = ImageBoxInfo(x = 23, y = 25, weight = 601, height = 341)
 
       val propositionId1 = getUUID()
       val sentenceId1 = getUUID()
@@ -107,7 +113,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
 
       val propositionId2 = getUUID()
       val sentenceId2 = getUUID()
-      val knowledge2 = getKnowledge(lang = lang, sentence = sentenceB, reference = referenceB, imageBoxInfo = imageBoxInfoB, transversalState)
+      val knowledge2 = Knowledge(lang = lang, sentence = sentenceB, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageB, transversalState)))
       registerSingleClaim(KnowledgeForParser(propositionId2, sentenceId2, knowledge2), transversalState)
 
       val propositionId3 = getUUID()
@@ -117,35 +123,55 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
 
       val propositionId4 = getUUID()
       val sentenceId4 = getUUID()
-      val knowledge4 = getKnowledge(lang = lang, sentence = sentenceD, reference = referenceD, imageBoxInfo = imageBoxInfoD, transversalState)
+      val knowledge4 = Knowledge(lang = lang, sentence = sentenceD, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageD, transversalState)))
       registerSingleClaim(KnowledgeForParser(propositionId4, sentenceId4, knowledge4), transversalState)
       
-      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
-      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
+      setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
+      setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
 
       val paraphraseA = "Living is so comfortable."
+      val knowledgeParaA = Knowledge(lang, paraphraseA, extentInfoJson = "{}")
+
       val paraphraseB = "There are two pets."
       val referenceParaB = Reference(url = "", surface = "pets", surfaceIndex = 3, isWholeSentence = false,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
-      val imageBoxInfoParaB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
-
-      val knowledgeParaB = getKnowledge(lang, paraphraseB, referenceParaB, imageBoxInfoParaB, transversalState)
+      val imageReferenceParaB = ImageReference(referenceParaB, x = 11, y = 11, width = 466, height = 310)
+      val knowledgeForImageParaB = KnowledgeForImage(getUUID(), imageReferenceParaB)                    
+      //val imageBoxInfoParaB = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
+      val knowledgeParaB = Knowledge(lang, paraphraseB, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageParaB, transversalState)))
+      
       val paraphraseC = "The culprit was one of us."
+      val knowledgeParaC = Knowledge(lang, paraphraseC, extentInfoJson = "{}")
+      
       val paraphraseD = "A large vehicle is parked."
       val referenceParaD = Reference(url = "", surface = "vehicle", surfaceIndex = 2, isWholeSentence = true,
         originalUrlOrReference = "https://farm8.staticflickr.com/7103/7210629614_5a388d9a9c_z.jpg")
-      val imageBoxInfoParaD = ImageBoxInfo(x = 23, y = 25, weight = 601, height = 341)
-      val knowledgeParaD = getKnowledge(lang, paraphraseD, referenceParaD, imageBoxInfoParaD, transversalState)
+      val imageReferenceParaD = ImageReference(referenceParaD, x = 23, y = 25, width = 601, height = 341)
+      val knowledgeForImageParaD = KnowledgeForImage(getUUID(), imageReferenceParaD)         
+      //val imageBoxInfoParaD = ImageBoxInfo(x = 23, y = 25, weight = 601, height = 341)
+      val knowledgeParaD = Knowledge(lang, paraphraseD, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageParaD, transversalState)))
 
-      val propositionIdForInference = getUUID()
-
-      val knowledgeForParser1 = KnowledgeForParser(propositionIdForInference, getUUID(), Knowledge(paraphraseA, lang, "{}", false, List.empty[KnowledgeForImage]))
-      val knowledgeForParser3 = KnowledgeForParser(propositionIdForInference, getUUID(), Knowledge(paraphraseC, lang, "{}", false, List.empty[KnowledgeForImage]))
+      val propositionIdForInference = getUUID()  
 
       val premiseKnowledge = List.empty[KnowledgeForParser]
-      val claimKnowledgeA = List(knowledgeForParser1)
-      val claimKnowledgeC = List(knowledgeForParser3)
+      val claimKnowledge1 = List(
+        KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaA),
+        KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaB),
+        KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaC))
+      val claimKnowledge2 = List(KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaD))
+      val inputSentenceForParser1 = InputSentenceForParser(premiseKnowledge, claimKnowledge1, ActionModeType.DEDUCTION_MODE.index)
+      val json1 = getAnalyzedSentenceObjectsJson(lang,inputSentenceForParser1, transversalState)
 
+      val inputSentenceForParser2 = InputSentenceForParser(premiseKnowledge, claimKnowledge2, ActionModeType.DEDUCTION_MODE.index)
+      val json2 = getAnalyzedSentenceObjectsJsonForSemiGlobal(lang,inputSentenceForParser2, transversalState)
+
+      val asos1 = Json.parse(json1).as[AnalyzedSentenceObjects]
+      val asos2 = Json.parse(json2).as[AnalyzedSentenceObjects]
+
+
+      val json = Json.toJson(AnalyzedSentenceObjects(asos1.analyzedSentenceObjects ::: asos2.analyzedSentenceObjects, asos1.deductionConfiguration)).toString()
+
+      /*
       val inputSentenceA = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledgeA, ActionModeType.DEDUCTION_MODE.index)).toString()
       val jsonNoImageA = ToposoidUtils.callComponent(inputSentenceA, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze", transversalState)
 
@@ -167,6 +193,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
 
       val inputAsos = AnalyzedSentenceObjects(List(asoA, asoB, asoC, asoD), DeductionConfiguration(ActionModeType.DEDUCTION_MODE.index, "", Map.empty[String, String], 10))
       val json = Json.toJson(inputAsos).toString()
+      */
       val fr = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
         .withJsonBody(Json.parse(json))

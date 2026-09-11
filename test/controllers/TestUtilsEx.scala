@@ -21,7 +21,7 @@ package controllers
 import com.ideal.linked.toposoid.common.{FeatureType, DataEntryType, Neo4JUtilsImpl, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.knowledgebase.regist.model.{ImageReference, Knowledge, KnowledgeForImage, PropositionRelation, Reference}
 import com.ideal.linked.common.DeploymentConverter.conf
-import com.ideal.linked.toposoid.knowledgebase.featurevector.model.RegistContentResult
+//import com.ideal.linked.toposoid.knowledgebase.featurevector.model.RegistContentResult
 import com.ideal.linked.toposoid.knowledgebase.model.{KnowledgeBaseNode, KnowledgeBaseSemiGlobalNode, KnowledgeFeatureReference, LocalContext, LocalContextForFeature}
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
 import com.ideal.linked.toposoid.protocol.model.neo4j.Neo4jRecords
@@ -30,7 +30,7 @@ import com.ideal.linked.toposoid.test.utils.TestUtils
 import play.api.libs.json.Json
 //import io.jvm.uuid.UUID
 
-case class ImageBoxInfo(x:Int, y:Int, weight:Int, height:Int)
+//case class ImageBoxInfo(x:Int, y:Int, weight:Int, height:Int)
 
 object TestUtilsEx {
 
@@ -67,7 +67,7 @@ object TestUtilsEx {
     uuid
   }
 
-
+  /*
   def getKnowledge(lang:String, sentence: String, reference: Reference, imageBoxInfo: ImageBoxInfo, transversalState: TransversalState): Knowledge = {
     Knowledge(sentence, lang, "{}", false, List(getImageInfo(reference, imageBoxInfo, transversalState)))
   }
@@ -199,4 +199,5 @@ object TestUtilsEx {
     }
     AnalyzedSentenceObjects(updatedAsos, asos.deductionConfiguration)
   }
+  */
 }
