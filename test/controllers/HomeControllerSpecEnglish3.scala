@@ -24,7 +24,7 @@ import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, Knowledg
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
 import com.ideal.linked.toposoid.protocol.model.frontend.Endpoint
 import com.ideal.linked.toposoid.protocol.model.parser.{InputSentenceForParser, KnowledgeForParser}
-import com.ideal.linked.toposoid.test.utils.TestUtils.{getAnalyzedSentenceObjectsJson, getAnalyzedSentenceObjectsJsonForSemiGlobal, setDeductionUnitEndPoints, uploadImage}
+import com.ideal.linked.toposoid.test.utils.TestUtils.{getAnalyzedSentenceObjectsJson, getAnalyzedSentenceObjectsJsonForSemiGlobal, setDeductionUnitEndPoints, uploadImage, uploadTable}
 import controllers.TestUtilsEx.{getUUID, registerSingleClaim, deleteNeo4JAllData}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.play.PlaySpec
@@ -40,6 +40,8 @@ import com.ideal.linked.toposoid.common.ActionModeType
 import com.ideal.linked.toposoid.protocol.model.base.DeductionConfiguration
 import com.ideal.linked.toposoid.common.DeductionPhaseType
 import com.ideal.linked.toposoid.knowledgebase.regist.model.ImageReference
+import com.ideal.linked.toposoid.knowledgebase.regist.model.TableReference
+import com.ideal.linked.toposoid.knowledgebase.regist.model.KnowledgeForTable
 
 class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting{
 
@@ -106,6 +108,20 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val knowledgeForImageD = KnowledgeForImage(getUUID(), imageReferenceD)         
       //val imageBoxInfoD = ImageBoxInfo(x = 23, y = 25, weight = 601, height = 341)
 
+      val sentenceE = "There is evidence data."
+      val referenceE = Reference(url = "", surface = "data", surfaceIndex = 3, isWholeSentence = false,
+        originalUrlOrReference = "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000001086170&fileKind=0")
+      val tableReferenceE = TableReference(referenceE, skipHeaderRows=5, skipRowList=List(),multiHeaderRows=4, sheetNameForExcel= "se0101")
+      val knowledgeForTableE = KnowledgeForTable(getUUID(), tableReferenceE)  
+
+      val sentenceF = "I will submit the evidence data."
+      val referenceF = Reference(url = "", surface = "", surfaceIndex = -1, isWholeSentence = true,
+        originalUrlOrReference = "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040292480&fileKind=1")
+      val tableReferenceF = TableReference(referenceF, skipHeaderRows=8, skipRowList=List(),multiHeaderRows=1, sheetNameForExcel= "")  
+      val knowledgeForTableF = KnowledgeForTable(getUUID(), tableReferenceF)    
+
+
+
       val propositionId1 = getUUID()
       val sentenceId1 = getUUID()
       val knowledge1 = Knowledge(sentenceA, lang, "{}", false)
@@ -126,6 +142,18 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val knowledge4 = Knowledge(lang = lang, sentence = sentenceD, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageD, transversalState)))
       registerSingleClaim(KnowledgeForParser(propositionId4, sentenceId4, knowledge4), transversalState)
       
+      val propositionId5 = getUUID()
+      val sentenceId5 = getUUID()
+      val knowledge5 = Knowledge(lang = lang, sentence = sentenceE, extentInfoJson = "{}", knowledgeForTables=List(uploadTable(knowledgeForTableE, transversalState)))
+      registerSingleClaim(KnowledgeForParser(propositionId5, sentenceId5, knowledge5), transversalState)
+      
+      val propositionId6 = getUUID()
+      val sentenceId6 = getUUID()
+      val knowledge6 = Knowledge(lang = lang, sentence = sentenceF, extentInfoJson = "{}", knowledgeForTables=List(uploadTable(knowledgeForTableF, transversalState)))
+      registerSingleClaim(KnowledgeForParser(propositionId6, sentenceId6, knowledge6), transversalState)
+      
+      
+      
       setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_TERM_BASE, transversalState)
       setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
 
@@ -144,12 +172,27 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val knowledgeParaC = Knowledge(paraphraseC, lang, extentInfoJson = "{}")
       
       val paraphraseD = "A large vehicle is parked."
-      val referenceParaD = Reference(url = "", surface = "vehicle", surfaceIndex = 2, isWholeSentence = true,
+      val referenceParaD = Reference(url = "", surface = "", surfaceIndex = -1, isWholeSentence = true,
         originalUrlOrReference = "https://farm8.staticflickr.com/7103/7210629614_5a388d9a9c_z.jpg")
       val imageReferenceParaD = ImageReference(referenceParaD, x = 23, y = 25, width = 601, height = 341)
       val knowledgeForImageParaD = KnowledgeForImage(getUUID(), imageReferenceParaD)         
       //val imageBoxInfoParaD = ImageBoxInfo(x = 23, y = 25, weight = 601, height = 341)
       val knowledgeParaD = Knowledge(paraphraseD, lang, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageParaD, transversalState)))
+
+      val paraphraseE = "There is evidence sample."
+      val referenceParaE = Reference(url = "", surface = "sample", surfaceIndex = 3, isWholeSentence = true,
+        originalUrlOrReference = "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000001086170&fileKind=0")  
+      val tableReferenceParaE = TableReference(referenceParaE, skipHeaderRows=5, skipRowList=List(),multiHeaderRows=4, sheetNameForExcel= "se0101")
+      val knowledgeForTableParaE = KnowledgeForTable(getUUID(), tableReferenceParaE)
+      val knowledgeParaE = Knowledge(paraphraseE, lang, extentInfoJson = "{}", knowledgeForTables=List(uploadTable(knowledgeForTableParaE, transversalState)))
+
+      val paraphraseF = "I will submit the evidence sample."
+      val referenceParaF = Reference(url = "", surface = "", surfaceIndex = -1, isWholeSentence = true,
+        originalUrlOrReference = "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040292480&fileKind=1")
+      val tableReferenceParaF = TableReference(referenceParaF, skipHeaderRows=8, skipRowList=List(),multiHeaderRows=1, sheetNameForExcel= "")
+      val knowledgeForTableParaF = KnowledgeForTable(getUUID(), tableReferenceParaF)  
+      val knowledgeParaF = Knowledge(paraphraseF, lang, extentInfoJson = "{}", knowledgeForTables=List(uploadTable(knowledgeForTableParaF, transversalState)))
+
 
       val propositionIdForInference = getUUID()  
 
@@ -157,8 +200,13 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val claimKnowledge1 = List(
         KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaA),
         KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaB),
-        KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaC))
-      val claimKnowledge2 = List(KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaD))
+        KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaC),
+        KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaE)
+        )
+      val claimKnowledge2 = List(
+        KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaD),
+        KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaF)
+      )
       val inputSentenceForParser1 = InputSentenceForParser(premiseKnowledge, claimKnowledge1, ActionModeType.DEDUCTION_MODE.index)
       val json1 = getAnalyzedSentenceObjectsJson(lang,inputSentenceForParser1, transversalState)
 
@@ -212,14 +260,17 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
 
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
-      assert(analyzedSentenceObjects.analyzedSentenceObjects.size == 4)
-      assert(targetAsos.filter(x => x.deductionResult.status).size == 4)
+      assert(analyzedSentenceObjects.analyzedSentenceObjects.size == 6)
+      assert(targetAsos.filter(x => x.deductionResult.status).size == 6)
       assert(actualEdgeSize == coveredPropositionEdgeSize)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseBaseMatch")).size > 0).size > 0)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseSynonymMatch")).size > 0).size > 0)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseImageMatch")).size > 0).size > 0)
-      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingWholeSentenceImageMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseTableMatch")).size > 0).size > 0)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingSentenceMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingWholeSentenceImageMatch")).size > 0).size > 0)
+      assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("EmbeddingWholeSentenceTableMatch")).size > 0).size > 0)
+      
       
       /*
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
