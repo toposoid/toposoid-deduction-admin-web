@@ -51,6 +51,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
   before {
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
+    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_TABLE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_TABLE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
     deleteNeo4JAllData(transversalState)
     Thread.sleep(1000)
   }
@@ -254,7 +255,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) =>
-          acc + x.deductionResult.coveredPropositionEdges.size
+          acc + x.deductionResult.coveredPropositionEdges.distinct.size
       }
       
 
