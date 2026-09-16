@@ -219,30 +219,6 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
 
 
       val json = Json.toJson(AnalyzedSentenceObjects(asos1.analyzedSentenceObjects ::: asos2.analyzedSentenceObjects, asos1.deductionConfiguration)).toString()
-
-      /*
-      val inputSentenceA = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledgeA, ActionModeType.DEDUCTION_MODE.index)).toString()
-      val jsonNoImageA = ToposoidUtils.callComponent(inputSentenceA, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze", transversalState)
-
-      val premiseKnowledgeB = List.empty[KnowledgeForParser]
-      val claimKnowledgeB = List(KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaB))
-      val inputSentenceB = Json.toJson(InputSentenceForParser(premiseKnowledgeB, claimKnowledgeB, ActionModeType.DEDUCTION_MODE.index)).toString()
-
-      val inputSentenceC = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledgeC, ActionModeType.DEDUCTION_MODE.index)).toString()
-      val jsonNoImageC = ToposoidUtils.callComponent(inputSentenceC, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze", transversalState)
-
-      val premiseKnowledgeD = List.empty[KnowledgeForParser]
-      val claimKnowledgeD = List(KnowledgeForParser(propositionIdForInference, getUUID(), knowledgeParaD))
-      val inputSentenceD = Json.toJson(InputSentenceForParser(premiseKnowledgeD, claimKnowledgeD, ActionModeType.DEDUCTION_MODE.index)).toString()
-
-      val asoA = Json.parse(jsonNoImageA).as[AnalyzedSentenceObjects].analyzedSentenceObjects.head
-      val asoB = addImageInfoToLocalNode(lang, inputSentenceB, knowledgeParaB.knowledgeForImages, transversalState).analyzedSentenceObjects.head
-      val asoC = Json.parse(jsonNoImageC).as[AnalyzedSentenceObjects].analyzedSentenceObjects.head
-      val asoD = addImageInfoToSemiGlobalNode(lang, inputSentenceD, knowledgeParaD.knowledgeForImages, transversalState).analyzedSentenceObjects.head
-
-      val inputAsos = AnalyzedSentenceObjects(List(asoA, asoB, asoC, asoD), DeductionConfiguration(ActionModeType.DEDUCTION_MODE.index, "", Map.empty[String, String], 10))
-      val json = Json.toJson(inputAsos).toString()
-      */
       val fr = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
         .withJsonBody(Json.parse(json))
@@ -255,7 +231,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
       val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
       val coveredPropositionEdgeSize = targetAsos.foldLeft(0) { (acc, x) =>
-          acc + x.deductionResult.coveredPropositionEdges.distinct.size
+          acc + x.deductionResult.coveredPropositionEdges.size
       }
       
 
