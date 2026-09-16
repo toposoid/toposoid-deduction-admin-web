@@ -24,7 +24,8 @@ import com.ideal.linked.toposoid.knowledgebase.regist.model.{Knowledge, Referenc
 import com.ideal.linked.toposoid.protocol.model.base.AnalyzedSentenceObjects
 import com.ideal.linked.toposoid.protocol.model.frontend.Endpoint
 import com.ideal.linked.toposoid.protocol.model.parser.{InputSentenceForParser, KnowledgeForParser}
-import controllers.TestUtilsEx.{addImageInfoToSemiGlobalNode, getImageInfo, getKnowledge, getUUID, registerSingleClaim}
+import com.ideal.linked.toposoid.test.utils.TestUtils.{getAnalyzedSentenceObjectsJson, getAnalyzedSentenceObjectsJsonForSemiGlobal, setDeductionUnitEndPoints, uploadImage, uploadTable}
+import controllers.TestUtilsEx.{getUUID, registerSingleClaim, deleteNeo4JAllData}
 //import io.jvm.uuid.UUID
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatestplus.play.PlaySpec
@@ -37,9 +38,12 @@ import play.api.test._
 
 import scala.concurrent.duration.DurationInt
 import com.ideal.linked.toposoid.common.ActionModeType
-import com.ideal.linked.toposoid.test.utils.TestUtils
 import com.ideal.linked.toposoid.common.DeductionPhaseType
 import com.ideal.linked.toposoid.protocol.model.base.KnowledgeBaseSideInfo
+import com.ideal.linked.toposoid.knowledgebase.regist.model.ImageReference
+import com.ideal.linked.toposoid.knowledgebase.regist.model.KnowledgeForImage
+import com.ideal.linked.toposoid.knowledgebase.regist.model.TableReference
+import com.ideal.linked.toposoid.knowledgebase.regist.model.KnowledgeForTable
 
 class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting {
 
@@ -49,19 +53,20 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
   before {
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_SENTENCE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
     ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_IMAGE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
-    TestUtilsEx.deleteNeo4JAllData(transversalState)
+    ToposoidUtils.callComponent("{}", conf.getString("TOPOSOID_TABLE_VECTORDB_ACCESSOR_HOST"), conf.getString("TOPOSOID_TABLE_VECTORDB_ACCESSOR_PORT"), "createSchema", transversalState)
+    deleteNeo4JAllData(transversalState)
     Thread.sleep(1000)
   }
   after {
-    TestUtilsEx.deleteNeo4JAllData(transversalState)
+    deleteNeo4JAllData(transversalState)
   }
 
   override def beforeAll(): Unit = {
-    TestUtilsEx.deleteNeo4JAllData(transversalState)
+    deleteNeo4JAllData(transversalState)
   }
 
   override def afterAll(): Unit = {
-    TestUtilsEx.deleteNeo4JAllData(transversalState)
+    deleteNeo4JAllData(transversalState)
   }
   val lang = "ja_JP"
   /*
@@ -136,7 +141,7 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
       val knowledge1 = Knowledge(sentenceA, "ja_JP", "{}", false)
       val paraphrase1 = Knowledge(paraphraseA, "ja_JP", "{}", false)
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)      
-      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
+      setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)
       val endPoints: Seq[Endpoint] = List(Endpoint("toposoid-embedding-deduction-unit-common-web", "9202", "GroupEmbeddingMatch"))
       val fr0 = FakeRequest(POST, "/changeEndPoints")
       .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
@@ -186,20 +191,24 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
       val sentenceA = "猫が２匹寝てます。"
       val referenceA = Reference(url = "", surface = "猫が", surfaceIndex = 0, isWholeSentence = true,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
-      val imageBoxInfoA = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
+      val imageReferenceA = ImageReference(referenceA, x = 11, y = 11, width = 466, height = 310)
+      val knowledgeForImageA = KnowledgeForImage(getUUID(), imageReferenceA)                          
+      //val imageBoxInfoA = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
 
       val paraphraseA = "ペットが２匹寝てます。"
       val referenceParaA = Reference(url = "", surface = "ペットが", surfaceIndex = 0, isWholeSentence = true,
         originalUrlOrReference = "http://images.cocodataset.org/val2017/000000039769.jpg")
-      val imageBoxInfoParaA = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
+      val imageReferenceParaA = ImageReference(referenceParaA, x = 11, y = 11, width = 466, height = 310)
+      val knowledgeForImageParaA = KnowledgeForImage(getUUID(), imageReferenceParaA)         
+      //val imageBoxInfoParaA = ImageBoxInfo(x = 11, y = 11, weight = 466, height = 310)
 
       val propositionId1 = getUUID()
       val sentenceId1 = getUUID()
       //val knowledge1 = Knowledge(sentenceA,"ja_JP", "{}", false, List(imageA))
-      val knowledge1 = getKnowledge(lang = lang, sentence = sentenceA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
-      val paraphrase1 = getKnowledge(lang = lang, sentence = paraphraseA, reference = referenceA, imageBoxInfo = imageBoxInfoA, transversalState)
+      val knowledge1 = Knowledge(lang = lang, sentence = sentenceA, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageA, transversalState)))
+      val paraphrase1 = Knowledge(lang = lang, sentence = paraphraseA, extentInfoJson = "{}", knowledgeForImages=List(uploadImage(knowledgeForImageParaA, transversalState)))
       registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
-      TestUtils.setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)      
+      setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)      
       val endPoints: Seq[Endpoint] = List(Endpoint("toposoid-embedding-deduction-unit-common-web", "9202", "GroupEmbeddingMatch"))
       val fr0 = FakeRequest(POST, "/changeEndPoints")
       .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
@@ -211,10 +220,10 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
       val propositionIdForInference = getUUID()
       val premiseKnowledge = List.empty[KnowledgeForParser]
       val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, getUUID(), paraphrase1))
-      val inputSentence = Json.toJson(InputSentenceForParser(premiseKnowledge, claimKnowledge, ActionModeType.DEDUCTION_MODE.index)).toString()
-      val asos = addImageInfoToSemiGlobalNode(lang = lang, inputSentence, List(getImageInfo(referenceParaA, imageBoxInfoParaA, transversalState)), transversalState)
-      val json:String = Json.toJson(asos).toString()
-
+      val inputSentenceForParser = InputSentenceForParser(premiseKnowledge, claimKnowledge, ActionModeType.DEDUCTION_MODE.index)
+      //val asos = addImageInfoToSemiGlobalNode(lang = lang, inputSentence, List(getImageInfo(referenceParaA, imageBoxInfoParaA, transversalState)), transversalState)
+      //val json:String = Json.toJson(asos).toString()
+      val json = getAnalyzedSentenceObjectsJsonForSemiGlobal(lang,inputSentenceForParser, transversalState)
       val fr = FakeRequest(POST, "/executeDeduction")
         .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
         .withJsonBody(Json.parse(json))
@@ -243,4 +252,62 @@ class HomeControllerSpecJapanese2 extends PlaySpec with BeforeAndAfter with Befo
     }
   }
 
+  "The specification4-japanese(whole-sentence-table-feature-match)" should {
+    "returns an appropriate response" in {
+
+      val sentenceA = "決定的に勝敗を左右する証拠データがあリます。"
+      val referenceA = Reference(url = "", surface = "", surfaceIndex = -1, isWholeSentence = true,        
+        originalUrlOrReference = "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000001086170&fileKind=0")
+      val tableReferenceA = TableReference(referenceA, skipHeaderRows=5, skipRowList=List(),multiHeaderRows=4, sheetNameForExcel= "se0101")
+      val knowledgeForTableA = KnowledgeForTable(getUUID(), tableReferenceA)  
+
+      val paraphraseA = "決定的に勝敗を左右する証拠サンプルがあリます。"
+      val referenceParaA = Reference(url = "", surface = "", surfaceIndex = -1, isWholeSentence = true,
+        originalUrlOrReference = "https://www.e-stat.go.jp/stat-search/file-download?statInfId=000001086170&fileKind=0")  
+      val tableReferenceParaA = TableReference(referenceParaA, skipHeaderRows=5, skipRowList=List(),multiHeaderRows=4, sheetNameForExcel= "se0101")
+      val knowledgeForTableParaA = KnowledgeForTable(getUUID(), tableReferenceParaA)
+
+      val propositionId1 = getUUID()
+      val sentenceId1 = getUUID()
+      //val knowledge1 = Knowledge(sentenceA,"ja_JP", "{}", false, List(imageA))
+      val knowledge1 = Knowledge(lang = lang, sentence = sentenceA, extentInfoJson = "{}", knowledgeForTables=List(uploadTable(knowledgeForTableA, transversalState)))
+      val paraphrase1 = Knowledge(lang = lang, sentence = paraphraseA, extentInfoJson = "{}", knowledgeForTables=List(uploadTable(knowledgeForTableParaA, transversalState)))
+      registerSingleClaim(KnowledgeForParser(propositionId1, sentenceId1, knowledge1), transversalState)
+      setDeductionUnitEndPoints(DeductionPhaseType.DEDUCTION_SENTENCE_BASE, transversalState)      
+
+      val propositionIdForInference = getUUID()
+      val premiseKnowledge = List.empty[KnowledgeForParser]
+      val claimKnowledge = List(KnowledgeForParser(propositionIdForInference, getUUID(), paraphrase1))
+      val inputSentenceForParser = InputSentenceForParser(premiseKnowledge, claimKnowledge, ActionModeType.DEDUCTION_MODE.index)
+      //val asos = addImageInfoToSemiGlobalNode(lang = lang, inputSentence, List(getImageInfo(referenceParaA, imageBoxInfoParaA, transversalState)), transversalState)
+      //val json: String = Json.toJson(asos).toString()
+      val json = getAnalyzedSentenceObjectsJsonForSemiGlobal(lang,inputSentenceForParser, transversalState)
+      val fr = FakeRequest(POST, "/executeDeduction")
+        .withHeaders("Content-type" -> "application/json", TRANSVERSAL_STATE.str -> transversalStateJson)
+        .withJsonBody(Json.parse(json))
+
+      val result = call(controller.executeDeduction(), fr)
+      status(result) mustBe OK
+      contentType(result) mustBe Some("application/json")
+
+      val jsonResult = contentAsJson(result).toString()
+      val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(jsonResult).as[AnalyzedSentenceObjects]
+      val targetAsos = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType.equals(SentenceType.CLAIM.index))
+
+      val coveredPropositionEdgeSize = targetAsos.foldLeft(0){(acc, x) => acc + x.deductionResult.coveredPropositionEdges.size}
+      val coveredKnowledgeList = targetAsos.foldLeft(List.empty[KnowledgeBaseSideInfo]){(acc, x) => acc ::: x.deductionResult.evidenceKnowledgeList}
+      val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
+
+      assert(actualEdgeSize == coveredPropositionEdgeSize)
+      val deductionUnits = coveredKnowledgeList.map(x => x.deductionUnits).flatten.distinct
+      assert(deductionUnits.contains("EmbeddingSentenceMatch") && deductionUnits.contains("EmbeddingWholeSentenceTableMatch"))
+      val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
+      assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))            
+      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
+      //TODO:評価方法を変更
+      //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("whole-sentence-image-feature-match")).size == 1).size == 1)
+
+
+    }
+  }
 }

@@ -21,7 +21,7 @@ package controllers
 import com.ideal.linked.toposoid.common.{FeatureType, DataEntryType, Neo4JUtilsImpl, ToposoidUtils, TransversalState}
 import com.ideal.linked.toposoid.knowledgebase.regist.model.{ImageReference, Knowledge, KnowledgeForImage, PropositionRelation, Reference}
 import com.ideal.linked.common.DeploymentConverter.conf
-import com.ideal.linked.toposoid.knowledgebase.featurevector.model.RegistContentResult
+//import com.ideal.linked.toposoid.knowledgebase.featurevector.model.RegistContentResult
 import com.ideal.linked.toposoid.knowledgebase.model.{KnowledgeBaseNode, KnowledgeBaseSemiGlobalNode, KnowledgeFeatureReference, LocalContext, LocalContextForFeature}
 import com.ideal.linked.toposoid.protocol.model.base.{AnalyzedSentenceObject, AnalyzedSentenceObjects}
 import com.ideal.linked.toposoid.protocol.model.neo4j.Neo4jRecords
@@ -30,7 +30,7 @@ import com.ideal.linked.toposoid.test.utils.TestUtils
 import play.api.libs.json.Json
 //import io.jvm.uuid.UUID
 
-case class ImageBoxInfo(x:Int, y:Int, weight:Int, height:Int)
+//case class ImageBoxInfo(x:Int, y:Int, weight:Int, height:Int)
 
 object TestUtilsEx {
 
@@ -65,138 +65,5 @@ object TestUtilsEx {
     }
     usedUuidList = usedUuidList :+ uuid
     uuid
-  }
-
-
-  def getKnowledge(lang:String, sentence: String, reference: Reference, imageBoxInfo: ImageBoxInfo, transversalState: TransversalState): Knowledge = {
-    Knowledge(sentence, lang, "{}", false, List(getImageInfo(reference, imageBoxInfo, transversalState)))
-  }
-
-  def getImageInfo(reference: Reference, imageBoxInfo: ImageBoxInfo, transversalState: TransversalState): KnowledgeForImage = {
-    val imageReference = ImageReference(reference: Reference, imageBoxInfo.x, imageBoxInfo.y, imageBoxInfo.weight, imageBoxInfo.height)
-    val knowledgeForImage = KnowledgeForImage(id = getUUID(), imageReference = imageReference)
-    val registContentResultJson = ToposoidUtils.callComponent(
-      Json.toJson(knowledgeForImage).toString(),
-      conf.getString("TOPOSOID_CONTENTS_ADMIN_HOST"),
-      conf.getString("TOPOSOID_CONTENTS_ADMIN_PORT"),
-      "registImage",
-      transversalState)
-    val registContentResult: RegistContentResult = Json.parse(registContentResultJson).as[RegistContentResult]
-    registContentResult.knowledgeForImage
-  }
-
-  /*
-  def registSingleClaim(knowledgeForParser: KnowledgeForParser, transversalState: TransversalState): Unit = {
-    val knowledgeSentenceSetForParser = KnowledgeSentenceSetForParser(
-      List.empty[KnowledgeForParser],
-      List.empty[PropositionRelation],
-      List(knowledgeForParser),
-      List.empty[PropositionRelation])
-    Sentence2Neo4jTransformer.createGraph(knowledgeSentenceSetForParser, transversalState)
-    FeatureVectorizer.createVector(knowledgeSentenceSetForParser, transversalState)
-  }
-   */
-
-  def addImageInfoToLocalNode(lang: String, inputSentence: String, knowledgeForImages: List[KnowledgeForImage], transversalState: TransversalState): AnalyzedSentenceObjects = {
-
-    val json = lang match {
-      case "ja_JP" => ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_PORT"), "analyze", transversalState)
-      case "en_US" => ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze", transversalState)
-    }
-    //val json = ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_PORT"), "analyze")
-    val asos: AnalyzedSentenceObjects = Json.parse(json).as[AnalyzedSentenceObjects]
-    val updatedAsos = asos.analyzedSentenceObjects.foldLeft(List.empty[AnalyzedSentenceObject]) {
-      (acc, x) => {
-        val nodeMap = x.nodeMap.foldLeft(Map.empty[String, KnowledgeBaseNode]) {
-          (acc2, y) => {
-            val compatibleImages = knowledgeForImages.filter(z => {
-              z.imageReference.reference.surface == y._2.predicateArgumentStructure.surface && z.imageReference.reference.surfaceIndex == y._2.predicateArgumentStructure.currentId
-            })
-            val knowledgeFeatureReferences = compatibleImages.foldLeft(List.empty[KnowledgeFeatureReference]) {
-              (acc3, z) => {
-                acc3 :+ KnowledgeFeatureReference(
-                  propositionId = y._2.propositionId,
-                  sentenceId = y._2.sentenceId,
-                  featureId = getUUID(),
-                  featureType = FeatureType.IMAGE.index,
-                  url = z.imageReference.reference.url,
-                  source = z.imageReference.reference.originalUrlOrReference,
-                  featureInputType = DataEntryType.MANUAL.index,
-                  extentText = "{}")
-              }
-            }
-            val knowledgeBaseNode = KnowledgeBaseNode(
-              nodeId = y._2.nodeId,
-              propositionId = y._2.propositionId,
-              sentenceId = y._2.sentenceId,
-              predicateArgumentStructure = y._2.predicateArgumentStructure,
-              localContext = LocalContext(
-                lang = y._2.localContext.lang,
-                namedEntities = y._2.localContext.namedEntities,
-                rangeExpressions = y._2.localContext.rangeExpressions,
-                categories = y._2.localContext.categories,
-                domains = y._2.localContext.domains,
-                knowledgeFeatureReferences = knowledgeFeatureReferences,
-                properNouns = y._2.localContext.properNouns
-                ))
-            acc2 ++ Map(y._1 -> knowledgeBaseNode)
-          }
-        }
-        acc :+ AnalyzedSentenceObject(
-          nodeMap = nodeMap,
-          edgeList = x.edgeList,
-          knowledgeBaseSemiGlobalNode = x.knowledgeBaseSemiGlobalNode,
-          deductionResult = x.deductionResult)
-      }
-    }
-    AnalyzedSentenceObjects(updatedAsos, asos.deductionConfiguration)
-  }
-
-  def addImageInfoToSemiGlobalNode(lang:String,inputSentence: String, knowledgeForImages: List[KnowledgeForImage], transversalState:TransversalState): AnalyzedSentenceObjects = {
-    /**
-     * CAUTION This function does not support cases where one node has multiple images!!!
-     */
-    val json = lang match {
-      case "ja_JP" => ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_JP_WEB_PORT"), "analyze", transversalState)
-      case "en_US" => ToposoidUtils.callComponent(inputSentence, conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_HOST"), conf.getString("TOPOSOID_SENTENCE_PARSER_EN_WEB_PORT"), "analyze", transversalState)
-    }
-
-    val asos: AnalyzedSentenceObjects = Json.parse(json).as[AnalyzedSentenceObjects]
-    val updatedAsos = asos.analyzedSentenceObjects.foldLeft(List.empty[AnalyzedSentenceObject]) {
-      (acc, x) => {
-
-        val knowledgeForImage = knowledgeForImages(acc.size)
-
-        val knowledgeFeatureReference = KnowledgeFeatureReference(
-          propositionId = x.knowledgeBaseSemiGlobalNode.propositionId,
-          sentenceId = x.knowledgeBaseSemiGlobalNode.sentenceId,
-          featureId = getUUID(),
-          featureType = FeatureType.IMAGE.index,
-          url = knowledgeForImage.imageReference.reference.url,
-          source = knowledgeForImage.imageReference.reference.originalUrlOrReference,
-          featureInputType = DataEntryType.MANUAL.index,
-          extentText = "{}")
-
-        val localContextForFeature = LocalContextForFeature(
-          x.knowledgeBaseSemiGlobalNode.localContextForFeature.lang,
-          List(knowledgeFeatureReference))
-
-        val knowledgeBaseSemiGlobalNode = KnowledgeBaseSemiGlobalNode(
-          sentenceId = x.knowledgeBaseSemiGlobalNode.sentenceId,
-          propositionId = x.knowledgeBaseSemiGlobalNode.propositionId,
-          documentId = x.knowledgeBaseSemiGlobalNode.documentId,
-          sentence = x.knowledgeBaseSemiGlobalNode.sentence,
-          sentenceType = x.knowledgeBaseSemiGlobalNode.sentenceType,
-          localContextForFeature = localContextForFeature)
-
-
-        acc :+ AnalyzedSentenceObject(
-          nodeMap = x.nodeMap,
-          edgeList = x.edgeList,
-          knowledgeBaseSemiGlobalNode = knowledgeBaseSemiGlobalNode,
-          deductionResult = x.deductionResult)
-      }
-    }
-    AnalyzedSentenceObjects(updatedAsos, asos.deductionConfiguration)
   }
 }
