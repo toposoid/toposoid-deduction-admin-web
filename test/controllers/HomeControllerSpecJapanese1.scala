@@ -44,6 +44,7 @@ import com.ideal.linked.toposoid.knowledgebase.regist.model.ImageReference
 import com.ideal.linked.toposoid.knowledgebase.regist.model.KnowledgeForImage
 import com.ideal.linked.toposoid.knowledgebase.regist.model.TableReference
 import com.ideal.linked.toposoid.knowledgebase.regist.model.KnowledgeForTable
+import com.ideal.linked.toposoid.common.AuthenticityType
 
 class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting {
 
@@ -171,7 +172,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
       val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
       assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))
-      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
+      assert(targetAsos.filter(x => x.deductionResult.authenticityType == AuthenticityType.SUPPORTED.index).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("exact-match")).size == 1).size == 1)
     }
@@ -220,7 +221,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
       assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))
 
-      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
+      assert(targetAsos.filter(x => x.deductionResult.authenticityType == AuthenticityType.SUPPORTED.index).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x =>  x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("synonym-match")).size == 1).size == 1)
     }
@@ -281,7 +282,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("ClauseImageMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
       val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
       assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))
-      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
+      assert(targetAsos.filter(x => x.deductionResult.authenticityType == AuthenticityType.SUPPORTED.index).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size == 1).size == 1)
 
@@ -342,7 +343,7 @@ class HomeControllerSpecJapanese1 extends PlaySpec with BeforeAndAfter with Befo
       assert(deductionUnits.contains("ClauseBaseMatch") && deductionUnits.contains("ClauseTableMatch") && deductionUnits.contains("EmbeddingSentenceMatch"))
       val sentenceIds = coveredKnowledgeList.map(x => x.sentenceId).distinct
       assert(sentenceIds.size == 1 && sentenceIds.head.equals(sentenceId1))      
-      assert(targetAsos.filter(x => x.deductionResult.status).size == 1)
+      assert(targetAsos.filter(x => x.deductionResult.authenticityType == AuthenticityType.SUPPORTED.index).size == 1)
       //TODO:評価方法を変更
       //assert(targetAsos.filter(x => x.deductionResult.coveredPropositionResults.filter(_.deductionUnit.equals("image-vector-match")).size == 1).size == 1)
 
