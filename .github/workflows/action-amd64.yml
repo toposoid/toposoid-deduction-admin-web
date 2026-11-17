@@ -19,7 +19,7 @@ jobs:
             cd ${GITHUB_WORKSPACE} && cd ../
             cd ./${{ env.PJ_REPO }}
             docker rm --force $(docker ps -a -q) > /dev/null 2>&1 && :
-            docker rmi --force ${{ env.PJ_REPO }}:${{ env.PJ_VERSION }}> /dev/null 2>&1 && :
+            docker rmi --force ${{ env.PJ_REPO }}:${{ env.PJ_VERSION }} > /dev/null 2>&1 && :
             docker rmi --force toposoid/${{ env.PJ_REPO }}:${{ env.PJ_VERSION }} > /dev/null 2>&1 && :
             docker rmi --force toposoid/toposoid-scala-lib:${{ env.PJ_VERSION }} > /dev/null 2>&1 && :            
             docker rmi --force toposoid/toposoid-contents-admin-web:${{ env.PJ_VERSION }} > /dev/null 2>&1 && :
