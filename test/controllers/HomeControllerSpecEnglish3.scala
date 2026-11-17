@@ -42,6 +42,7 @@ import com.ideal.linked.toposoid.common.DeductionPhaseType
 import com.ideal.linked.toposoid.knowledgebase.regist.model.ImageReference
 import com.ideal.linked.toposoid.knowledgebase.regist.model.TableReference
 import com.ideal.linked.toposoid.knowledgebase.regist.model.KnowledgeForTable
+import com.ideal.linked.toposoid.common.AuthenticityType
 
 class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with BeforeAndAfterAll with GuiceOneAppPerSuite with DefaultAwaitTimeout with Injecting{
 
@@ -238,7 +239,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(analyzedSentenceObjects.analyzedSentenceObjects.size == 6)
-      assert(targetAsos.filter(x => x.deductionResult.status).size == 6)
+      assert(targetAsos.filter(x => x.deductionResult.authenticityType == AuthenticityType.SUPPORTED.index).size == 6)
       assert(actualEdgeSize == coveredPropositionEdgeSize)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseBaseMatch")).size > 0).size > 0)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(x => x.deductionUnits.contains("ClauseSynonymMatch")).size > 0).size > 0)
@@ -266,7 +267,7 @@ class HomeControllerSpecEnglish3 extends PlaySpec with BeforeAndAfter with Befor
       val actualEdgeSize = targetAsos.foldLeft(0) { (acc, x) => acc + x.edgeList.size }
 
       assert(analyzedSentenceObjects.analyzedSentenceObjects.size == 4)
-      assert(targetAsos.filter(x => x.deductionResult.status).size == 4)
+      assert(targetAsos.filter(x => x.deductionResult.authenticityType == AuthenticityType.SUPPORTED.index).size == 4)
       assert(actualEdgeSize == coveredPropositionEdgeSize)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("ClauseBaseMatch")).size > 0).size > 0)
       assert(targetAsos.filter(x => x.deductionResult.evidenceKnowledgeList.filter(_.equals("ClauseSynonymMatch")).size > 0).size > 0)

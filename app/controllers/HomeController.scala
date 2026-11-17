@@ -33,6 +33,7 @@ import scala.util.{Failure, Success}
 import com.ideal.linked.toposoid.common.Neo4JUtilsImpl
 import com.ideal.linked.toposoid.protocol.model.base.DeductionConfiguration
 import com.ideal.linked.toposoid.protocol.model.base.DeductionResult
+import com.ideal.linked.toposoid.common.AuthenticityType
 
 
 /**
@@ -100,11 +101,9 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
   private def updateAnalyzedSentenceObjects(orgAsos:AnalyzedSentenceObjects, deducedAsos:AnalyzedSentenceObjects):AnalyzedSentenceObjects = {
     val asoList = deducedAsos.analyzedSentenceObjects.zip(orgAsos.analyzedSentenceObjects).map((x,y) => {
       val updatedDeductionResult = DeductionResult(
-        y.deductionResult.status, 
         y.deductionResult.authenticityType,
         y.deductionResult.coveredPropositionEdges,
         x.deductionResult.evidenceKnowledgeList,
-        y.deductionResult.havePremiseInGivenProposition,
         x.deductionResult.deductionPhaseType
       )
       AnalyzedSentenceObject(y.nodeMap, y.edgeList, y.knowledgeBaseSemiGlobalNode,  updatedDeductionResult)
@@ -131,7 +130,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
           case "-" =>  x._2.analyzedSentenceObjects
           case _ => {
             acc.zip(x._2.analyzedSentenceObjects).map((y,z) => {     
-              z.deductionResult.status match {
+              List(AuthenticityType.SUPPORTED.index,AuthenticityType.REFUTED.index).contains(z.deductionResult.authenticityType) match {
                 case true => z
                 case false => y
               }
@@ -146,7 +145,16 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
   private def execute(endpoint:Endpoint, analyzedSentenceObjects:AnalyzedSentenceObjects, transversalState:TransversalState):AnalyzedSentenceObjects ={
 
     if(endpoint.host.equals(NO_HOST) || endpoint.port.equals(NO_PORT) || endpoint.name.equals(NO_NAME)) return analyzedSentenceObjects
-    
+
+    val result = ToposoidUtils.callComponent(
+          Json.toJson(analyzedSentenceObjects).toString,
+          endpoint.host,
+          endpoint.port,
+          "execute",
+          transversalState)
+    Json.parse(result).as[AnalyzedSentenceObjects]
+
+    /*
     val deducitonConfig = analyzedSentenceObjects.deductionConfiguration
     val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.PREMISE.index).size > 0
     //If the proposition has premise, the truth of the claim is determined along with the truth of havePremiseInGivenProposition.
@@ -167,96 +175,8 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     }else{
       analyzedSentenceObjects
     }
+    */
   }
-
-  /*
-  private def getResultJson(json:String):List[AnalyzedSentenceObject] ={
-    
-    val resultAsos = Json.parse(json).as[AnalyzedSentenceObjects].analyzedSentenceObjects
-    resultAsos.foldLeft(List.empty[AnalyzedSentenceObject]){
-      (acc, x) => {
-        val selfAsos = targetAsos.filter(_.knowledgeBaseSemiGlobalNode.sentenceId.equals(x.knowledgeBaseSemiGlobalNode.sentenceId))
-        val aso = selfAsos.size match {
-          case 0 => x
-          case _ => {
-            //evidenceは、引き継ぎ、coveredEdgesは、引き継がない？
-            AnalyzedSentenceObject(x.nodeMap, x.edgeList, x.knowledgeBaseSemiGlobalNode, selfAsos.head.deductionResult)
-
-          }
-        }
-        acc :+ aso
-      }
-    }
-  }
-  */
-
-  /*
-  private def getResultJson(targetJson:String, resultJson:String, deducitonConfig:DeductionConfiguration):(String,String) ={
-    val targetAsos = Json.parse(targetJson).as[AnalyzedSentenceObjects].analyzedSentenceObjects
-    val resultAsos = Json.parse(resultJson).as[AnalyzedSentenceObjects].analyzedSentenceObjects
-
-    val asos = resultAsos.foldLeft(List.empty[AnalyzedSentenceObject]){
-      (acc, x) => {
-        val selfAsos = targetAsos.filter(_.knowledgeBaseSemiGlobalNode.sentenceId.equals(x.knowledgeBaseSemiGlobalNode.sentenceId))
-        val aso = selfAsos.size match {
-          case 0 => x
-          case _ => {
-            //evidenceは、引き継ぎ、coveredEdgesは、引き継がない？
-            AnalyzedSentenceObject(x.nodeMap, x.edgeList, x.knowledgeBaseSemiGlobalNode, selfAsos.head.deductionResult)
-
-          }
-        }
-        acc :+ aso
-      }
-    }
-    val updateResultJson = Json.toJson(AnalyzedSentenceObjects(asos, deducitonConfig)).toString()
-    (targetJson, updateResultJson)
-  }
-  
-  private def deduce(index:Int, targetJson:String, resultJson:String, endPoints:Seq[Endpoint], transversalState:TransversalState): (Int, String, String) ={
-
-    val asosJson = execute(endPoints(index), targetJson, resultJson, transversalState)
-    if(index == endPoints.size -1){
-      (index, asosJson._1, asosJson._2)
-    }else{
-      deduce(index + 1, asosJson._1, asosJson._2, endPoints, transversalState)
-    }
-  }
-  
-  /**
-   *　This function delegates processing to a registered group of microservices that perform deductive inference.
-   * @param endpoint
-   * @return
-   */
-  
-  private def execute(endpoint:Endpoint, targetJson:String, resultJson:String, transversalState:TransversalState): (String, String) ={
-
-    if(endpoint.host.equals(NO_HOST) || endpoint.port.equals(NO_PORT) || endpoint.name.equals(NO_NAME)) return (targetJson, resultJson)
-    val analyzedSentenceObjects: AnalyzedSentenceObjects = Json.parse(targetJson).as[AnalyzedSentenceObjects]
-    val deducitonConfig = analyzedSentenceObjects.deductionConfiguration
-    val hasPremise = analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.PREMISE.index).size > 0
-    //If the proposition has premise, the truth of the claim is determined along with the truth of havePremiseInGivenProposition.
-    val checkTargets = hasPremise match  {
-      case true => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.CLAIM.index && x.deductionResult.havePremiseInGivenProposition)
-      case _ => analyzedSentenceObjects.analyzedSentenceObjects.filter(x => x.knowledgeBaseSemiGlobalNode.sentenceType == SentenceType.CLAIM.index)
-    }
-    val notFinished = checkTargets.filterNot(x => x.deductionResult.status)
-    if(notFinished.size > 0) {
-      val targets:List[AnalyzedSentenceObject] = notFinished      
-      val result = ToposoidUtils.callComponent(
-            Json.toJson(AnalyzedSentenceObjects(targets, deducitonConfig)).toString(),
-            endpoint.host,
-            endpoint.port,
-            "execute",
-            transversalState)
-
-      getResultJson(result, resultJson, deducitonConfig)
-    }else{
-      getResultJson(targetJson, resultJson, deducitonConfig)
-    }
-  }
-
-  */
 
 }
 
